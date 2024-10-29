@@ -1,0 +1,122 @@
+/* login.css */
+body {
+    background-image: url('../images/3.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 2rem 0;
+}
+
+.page-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 0;
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+}
+
+.register-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
+    padding: 2.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.register-header {
+    margin-bottom: 2rem;
+}
+
+.register-header h2 {
+    color: #344767;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-group {
+    margin-bottom: 0;
+}
+
+.form-label {
+    color: #344767;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    border-radius: 10px;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(52, 71, 103, 0.15);
+    border-color: #344767;
+}
+
+.btn-register {
+    background: #344767;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-register:hover {
+    background: #273553;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(52, 71, 103, 0.2);
+}
+
+.links-section {
+    margin-top: 1rem;
+}
+
+.links-section a {
+    color: #344767;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.links-section a:hover {
+    color: #273553;
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .register-card {
+        padding: 1.5rem;
+    }
+    
+    .container {
+        padding: 0 1rem;
+    }
+}

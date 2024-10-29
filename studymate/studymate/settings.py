@@ -37,8 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'apps.core',
+    'core',
+    'apps.goals',
+    'apps.study_sessions',
+    'apps.tasks',
+    'apps.reminders',
     'bootstrap5',
+    'adminlte3',
 ]
 
 MIDDLEWARE = [
@@ -72,6 +77,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'studymate.wsgi.application'
 
 
+
+AUTH_USER_MODEL = 'core.User'
+
+AUTHENTICATION_BACKENDS = ['core.backends.EmailBackend']
+
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -100,6 +111,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
+
 
 
 # Internationalization
