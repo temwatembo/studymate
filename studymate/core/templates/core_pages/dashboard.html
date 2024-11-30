@@ -1,39 +1,205 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container mt-5">
-    <h1>Welcome, {{ request.user.first_name }}!</h1>
+{% extends 'basic/dashboard/main_nav.html' %}
+{% load static %}
 
-    <h2>Your Goals</h2>
-    <ul class="list-group">
-        {% for goal in user_goals %}
-            <li class="list-group-item">{{ goal.goal_title }} - {{ goal.progress_percentage }}%</li>
-        {% empty %}
-            <li class="list-group-item">No goals available</li>
-        {% endfor %}
-    </ul>
+{% block title %}Dashboard{% endblock %}
 
-    <h2 class="mt-4">Recent Study Sessions</h2>
-    <ul class="list-group">
-        {% for session in study_sessions %}
-            <li class="list-group-item">{{ session.subject }} from {{ session.start_time }} to {{ session.end_time }}</li>
-        {% empty %}
-            <li class="list-group-item">No study sessions recorded</li>
-        {% endfor %}
-    </ul>
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <div class="row g-4">
+        <!-- Welcome Section -->
+         <!-- Welcome Section -->
+         <div class="col-12">
+            <div class="welcome-card bg-gradient-primary text-white rounded-4 p-4 shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-6 fw-bold mb-2 text-black">Welcome back, {{ request.user.first_name }}!</h1>
+                        <p class="text-black">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            {{ "now"|date:"F d, Y" }} | 
+                            <span id="current-time"></span>
+                        </p>
+                    </div>
+                    <div class="welcome-icon text-black">
+                        <i class="fas fa-graduation-cap fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <h2 class="mt-4">Tasks</h2>
-    <ul class="list-group">
-        {% for task in tasks %}
-            <li class="list-group-item">{{ task.task_title }} - {{ task.status }}</li>
-        {% empty %}
-            <li class="list-group-item">No tasks available</li>
-        {% endfor %}
-    </ul>
+        <!-- Quick Stats -->
+        <div class="col-12">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="stat-card bg-white rounded-4 p-3 shadow-sm">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-success-soft text-success rounded-circle p-3 me-3">
+                                <i class="fas fa-bullseye fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">Total Goals</h5>
+                                <h3 class="fw-bold mb-0">{{ user_goals|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card bg-white rounded-4 p-3 shadow-sm">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-warning-soft text-warning rounded-circle p-3 me-3">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">Study Time</h5>
+                                <h3 class="fw-bold mb-0">
+                                    {% with total_study_hours=study_sessions|length %}
+                                        {{ total_study_hours|add:total_study_hours }} hrs
+                                    {% endwith %}
+                                </h3>
+                            </div>                            
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card bg-white rounded-4 p-3 shadow-sm">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-info-soft text-info rounded-circle p-3 me-3">
+                                <i class="fas fa-tasks fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">Pending Tasks</h5>
+                                <h3 class="fw-bold mb-0">{{ tasks|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goals and Progress -->
+        <div class="col-lg-8">
+            <div class="card rounded-4 shadow-sm">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h3 class="card-title">Your Goals</h3>
+                </div>
+                <div class="card-body">
+                    {% for goal in user_goals %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold">{{ goal.goal_title }}</span>
+                            <span>{{ goal.progress_percentage }}%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ goal.progress_percentage }}%; background-color: {{ colors|slice:forloop.counter0 }}" 
+                                 aria-valuenow="{{ goal.progress_percentage }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No goals set yet</p>
+                    {% endfor %}
+                </div>
+                
+            </div>
+        </div>
+        <!-- Recent Activities -->
+        <div class="col-lg-4">
+            <div class="card rounded-4 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h3 class="card-title">Recent Study Sessions</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for session in study_sessions|slice:":5" %}
+                        <li class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <div class="rounded-circle bg-primary-soft p-2 text-primary">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ session.subject }}</h6>
+                                <small class="text-muted">
+                                    {{ session.start_time|date:"M d, H:i" }} - 
+                                    {{ session.end_time|date:"H:i" }}
+                                </small>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <p class="text-muted text-center">No recent study sessions</p>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Section -->
+        <div class="col-12">
+            <div class="card rounded-4 shadow-sm">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h3 class="card-title">Your Tasks</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for task in tasks|slice:":6" %}
+                        <div class="col-md-4">
+                            <div class="task-card bg-light rounded-3 p-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h6 class="mb-0">{{ task.task_title }}</h6>
+                                    <span class="badge 
+                                        {% if task.status == 'Completed' %}bg-success
+                                        {% elif task.status == 'In Progress' %}bg-warning
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ task.status }}
+                                    </span>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="far fa-calendar-alt me-2"></i>
+                                    {{ task.due_date|default:"No due date" }}
+                                </small>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <p class="text-muted text-center">No tasks available</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-</body>
-</html>
+
+<style>
+   /* Study-Related Gradient */
+/* Dark Grayish Background with Amber */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #E6F8F2 0%, #E6F8F2 70%, #ffbf00 100%);
+}
+
+    
+    .bg-success-soft { background-color: rgba(16, 185, 129, 0.1); }
+    .bg-warning-soft { background-color: rgba(245, 158, 11, 0.1); }
+    .bg-info-soft { background-color: rgba(14, 165, 233, 0.1); }
+    .bg-primary-soft { background-color: rgba(37, 99, 235, 0.1); }
+
+    /* Responsive Typography */
+    @media (max-width: 768px) {
+        .display-6 { font-size: 1.5rem; }
+    }
+</style>
+
+<script>
+    // Real-time Clock
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('current-time').textContent = 
+            now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+</script>
+{% endblock %}

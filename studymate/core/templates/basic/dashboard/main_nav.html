@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}Studymate - Make studying fun and worthwhile</title>
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+
+/* Scale the contents down to 80% */
+.content-wrapper {
+    transform: scale(0.9); /* Scale down to 80% */
+    transform-origin: top center; /* Anchor scaling to the top center */
+    margin: 0 auto; /* Center the content horizontally */
+    font-size: 90%; /* Slightly reduce font size for better scaling */
+    max-width: 100%; /* Ensure it doesn’t overflow */
+}
+
+/* Optional: Body adjustments to ensure centering */
+body, html {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center; /* Horizontally center */
+    align-items: flex-start; /* Keep content aligned to the top */
+    overflow-x: hidden; /* Prevent horizontal overflow */
+}
+
+
+.study-background {
+    background-color: #f4f6f9;
+    background-image: 
+        linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 30px 30px;
+    position: relative;
+    min-height: 100vh; /* Ensure it fills the viewport */
+}
+
+.study-background::before,
+.study-background::after {
+    pointer-events: none; /* Prevent interference */
+    z-index: -1; /* Ensure they stay in the background */
+}
+
+main {
+    position: relative;
+    overflow-y: auto; /* Allow scrolling */
+}
+
+
+       
+    </style>
+</head>
+
+<body class="study-background min-vh-100">
+   <div class="container px-4 py-3">
+    <header class="py-4">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container-fluid">
+                <!-- Logo on the left -->
+                <a class="navbar-brand fs-4 fw-bold text-dark" href="#">
+                    <i class="fas fa-graduation-cap me-2"></i>StudyMate
+                </a>
+                
+                <!-- Toggler for mobile -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+           
+                <!-- Navigation links on the right -->
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav align-items-center">
+                        <li class="nav-item me-3">
+                            <a class="nav-link text-muted" href="#">
+                                <i class="fas fa-bullseye  me-2"></i>Goals
+                            </a>
+                        </li>
+                        <li class="nav-item me-3">
+                            <a class="nav-link text-muted" href="#">
+                                <i class="fas fa-clock  me-2"></i>Study Sessions
+                            </a>
+                        </li>
+                        <li class="nav-item me-3">
+                            <a class="nav-link text-muted" href="#">
+                                <i class="fas fa-tasks  me-2"></i>Tasks
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/logout" class="btn btn-outline-primary rounded-pill">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="content-wrapper ">
+        <main class="py-5">
+           {% block content %} {% endblock %} 
+        </main>
+     </div>
+   </div>
+</body>
+</html>
