@@ -1,0 +1,27 @@
+<!-- task_form.html -->
+{% extends 'basic/dashboard/main_nav.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Goals{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">
+        {% if form.instance.pk %}Update Goal{% else %}Create Goals{% endif %}
+    </h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form|crispy }}  <!-- Use crispy to render the form with Bootstrap styles -->
+        </div>
+        
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-success">
+                {% if form.instance.pk %}Update{% else %}Create{% endif %}
+            </button>
+            <a href="{% url 'goals:goal_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

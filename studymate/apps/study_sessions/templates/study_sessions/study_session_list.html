@@ -1,0 +1,97 @@
+{% extends 'basic/dashboard/main_nav.html' %}
+{% load static %}
+
+{% block title %}Study Sessions{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Study Session List</h1>
+    <a href="{% url 'study_sessions:study_session_create' %}" class="btn btn-primary mb-3">Add Session</a>
+    
+    <!-- Responsive Table Wrapper for Small Screens -->
+    <div class="table-responsive d-md-none">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Subject</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for study_session in sessions %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ study_session.subject }}</td>
+                    <td>{{ study_session.start_time }}</td>
+                    <td>{{ study_session.end_time }}</td>
+                    <td>{{ study_session.duration }}</td>
+               
+                    <td class="text-center">
+                        <!-- Actions Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'study_sessions:study_session_update' study_session.id %}">Edit</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'study_sessions:study_session_delete' study_session.id %}">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Standard Table for Medium and Larger Screens -->
+    <table class="table table-striped table-hover align-middle d-none d-md-table">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Subject</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Duration</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for study_session in sessions %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ study_session.subject }}</td>
+                <td>{{ study_session.start_time }}</td>
+                <td>{{ study_session.end_time }}</td>
+                <td>{{ study_session.duration }}</td>
+            
+                <td class="text-center">
+                    <!-- Actions Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'study_sessions:study_session_update' study_session.id %}">Edit</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'study_sessions:study_session_delete' study_session.id %}">Delete</a>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

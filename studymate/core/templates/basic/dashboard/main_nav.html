@@ -71,7 +71,7 @@ main {
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
             <div class="container-fluid">
                 <!-- Logo on the left -->
-                <a class="navbar-brand fs-4 fw-bold text-dark" href="#">
+                <a class="navbar-brand fs-4 fw-bold text-dark" href="/dashboard">
                     <i class="fas fa-graduation-cap me-2"></i>StudyMate
                 </a>
                 
@@ -84,17 +84,17 @@ main {
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav align-items-center">
                         <li class="nav-item me-3">
-                            <a class="nav-link text-muted" href="#">
+                            <a class="nav-link text-muted" href="{% url 'goals:goal_list' %}">
                                 <i class="fas fa-bullseye  me-2"></i>Goals
                             </a>
                         </li>
                         <li class="nav-item me-3">
-                            <a class="nav-link text-muted" href="#">
+                            <a class="nav-link text-muted" href="{% url 'study_sessions:study_session_list' %}">
                                 <i class="fas fa-clock  me-2"></i>Study Sessions
                             </a>
                         </li>
                         <li class="nav-item me-3">
-                            <a class="nav-link text-muted" href="#">
+                            <a class="nav-link text-muted" href="{% url 'tasks:task_list' %}">
                                 <i class="fas fa-tasks  me-2"></i>Tasks
                             </a>
                         </li>

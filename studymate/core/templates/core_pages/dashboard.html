@@ -37,7 +37,7 @@
                             </div>
                             <div>
                                 <h5 class="mb-1">Total Goals</h5>
-                                <h3 class="fw-bold mb-0">{{ user_goals|length }}</h3>
+                                <h3 class="fw-bold mb-0">{{ goals|length }}</h3>
                             </div>
                         </div>
                     </div>
@@ -49,11 +49,9 @@
                                 <i class="fas fa-clock fa-2x"></i>
                             </div>
                             <div>
-                                <h5 class="mb-1">Study Time</h5>
                                 <h3 class="fw-bold mb-0">
-                                    {% with total_study_hours=study_sessions|length %}
-                                        {{ total_study_hours|add:total_study_hours }} hrs
-                                    {% endwith %}
+                                    <h3 class="mb-1">Total Study Time</h3>
+                                    <p>{{ total_study_hours }} hours and {{ total_study_minutes }} minutes</p>
                                 </h3>
                             </div>                            
                         </div>

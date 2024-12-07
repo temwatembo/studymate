@@ -40,6 +40,8 @@ def register_view(request):
 
     return render(request, 'core_pages/register.html', {'form': form})  # Pass the form to the template
 
+from datetime import timedelta
+
 @login_required
 def dashboard(request):
     user = request.user
@@ -47,12 +49,24 @@ def dashboard(request):
     sessions = StudySession.objects.filter(user=user)
     tasks = Task.objects.filter(user=user)
     reminders = Reminder.objects.filter(user=user)
-    
+
+    # Calculate total study hours
+    total_study_time = timedelta()  # Initialize as a timedelta object
+    for session in sessions:
+        if session.start_time and session.end_time:  # Ensure both times exist
+            total_study_time += session.end_time - session.start_time
+
+    # Convert total study time to hours and minutes
+    total_hours = total_study_time.total_seconds() // 3600
+    total_minutes = (total_study_time.total_seconds() % 3600) // 60
+
     context = {
         'goals': goals,
         'sessions': sessions,
         'tasks': tasks,
         'reminders': reminders,
+        'total_study_hours': total_hours,
+        'total_study_minutes': total_minutes,
     }
     return render(request, 'core_pages/dashboard.html', context)
 

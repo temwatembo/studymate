@@ -1,0 +1,17 @@
+<!-- task_confirm_delete.html -->
+{% extends 'basic/dashboard/main_nav.html' %}
+{% load static %}
+
+{% block title %}Study Sessions{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Confirm Delete</h1>
+    <p>Are you sure you want to delete "{{ study_session.subject }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a href="{% url 'study_sessions:study_session_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
