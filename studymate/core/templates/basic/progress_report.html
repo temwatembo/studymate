@@ -1,0 +1,320 @@
+{% extends 'basic/dashboard/main_nav.html' %}
+{% load static %}
+
+{% block title %}My Progress Report{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .progress-card {
+        border: none;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+        border-radius: 12px;
+        background-color: white;
+    }
+
+    .card-header {
+        font-weight: 600;
+        font-size: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: 600;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #eaeff4;
+    }
+
+    .performance-badge {
+        font-size: 1.25rem;
+        font-weight: bold;
+        padding: 0.75rem 1.5rem;
+        border-radius: 30px;
+        background-color: #e0f7fa;
+        display: inline-block;
+        margin-top: 1rem;
+    }
+
+    .progress-bar-custom {
+        height: 0.75rem;
+        border-radius: 6px;
+        background-color: #e9ecef;
+    }
+
+    .progress-bar-custom .progress-bar {
+        border-radius: 6px;
+    }
+
+    .insight-card, .recommendation-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        margin-bottom: 1.5rem;
+    }
+
+    .timeline-item {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f1f1;
+    }
+
+    .timeline-item:last-child {
+        border-bottom: none;
+    }
+
+    .subject-progress {
+        margin-bottom: 1rem;
+    }
+
+    .subject-progress .progress-bar {
+        background-color: #0d6efd;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.45em 0.7em;
+        border-radius: 0.5rem;
+    }
+</style>
+
+<div class="container-fluid     py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h1 class="h3 mb-1 text-white ">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Progress Report
+                    </h1>
+                    <p class="text-white small">Your study performance insights and recommendations</p>
+                </div>
+                <div>
+                    <span class="badge bg-info text-white fs-6">{{ current_date|date:"M d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card progress-card text-white bg-primary text-center p-3">
+                <i class="fas fa-bullseye fa-2x mb-2"></i>
+                <div class="stat-number">{{ total_goals }}</div>
+                <div class="stat-label">Total Goals</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card progress-card text-white bg-success text-center p-3">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <div class="stat-number">{{ completed_goals }}</div>
+                <div class="stat-label">Completed Goals</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card progress-card text-white bg-warning text-center p-3">
+                <i class="fas fa-tasks fa-2x mb-2"></i>
+                <div class="stat-number">{{ total_tasks }}</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card progress-card text-white bg-info text-center p-3">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+                <div class="stat-number">{{ total_study_hours }}h</div>
+                <div class="stat-label">Study Hours</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Overall Performance -->
+            <div class="card progress-card mb-4">
+                <div class="card-header bg-white">
+                    <i class="fas fa-tachometer-alt me-2"></i> Overall Performance
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label small">Goal Completion Rate</label>
+                                <div class="progress progress-bar-custom">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ goal_completion_rate }}%">
+                                        {{ goal_completion_rate }}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Task Completion Rate</label>
+                                <div class="progress progress-bar-custom">
+                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                         style="width: {{ task_completion_rate }}%">
+                                        {{ task_completion_rate }}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Average Goal Progress</label>
+                                <div class="progress progress-bar-custom">
+                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                         style="width: {{ average_goal_progress }}%">
+                                        {{ average_goal_progress }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <div class="performance-badge {{ performance_class }}">
+                                {{ performance_level }}
+                            </div>
+                            <p class="text-muted mt-2 small">Based on your current completion rates and study consistency</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Study Sessions Overview -->
+            <div class="card progress-card mb-4">
+                <div class="card-header bg-white">
+                    <i class="fas fa-book-open me-2"></i> Study Sessions Overview
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3 text-center">
+                        <div class="col-md-4">
+                            <div class="stat-number">{{ study_sessions_count }}</div>
+                            <div class="text-dark">Total Sessions</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-number">{{ average_session_duration }}h</div>
+                            <div class="text-dark">Avg Duration</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-number">{{ most_studied_subject }}</div>
+                            <div class="text-dark">Top Subject</div>
+                        </div>
+                    </div>
+
+                    {% for subject, hours, percentage in subject_stats %}
+                    <div class="subject-progress">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>{{ subject }}</span>
+                            <span class="text-muted">{{ hours }}h</span>
+                        </div>
+                        <div class="progress progress-bar-custom">
+                            <div class="progress-bar" role="progressbar" style="width: {{ percentage }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recent Activity Timeline -->
+            <div class="card progress-card">
+                <div class="card-header bg-white">
+                    <i class="fas fa-history me-2"></i> Recent Activity
+                </div>
+                <div class="card-body">
+                    {% for activity in recent_activities %}
+                    <div class="timeline-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1 small">{{ activity.title }}</h6>
+                                <p class="mb-1 text-muted small">{{ activity.description }}</p>
+                                <small class="text-muted">{{ activity.date|date:"M d, Y H:i" }}</small>
+                            </div>
+                            <span class="badge bg-{{ activity.type }}">{{ activity.category }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No recent activities found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Key Insights -->
+            <div class="insight-card">
+                <h6 class="mb-3"><i class="fas fa-lightbulb me-2"></i> Key Insights</h6>
+                <ul class="list-unstyled small">
+                    {% for insight in insights %}
+                    <li class="mb-2"><i class="fas fa-arrow-right me-2"></i>{{ insight }}</li>
+                    {% empty %}
+                    <li>Keep tracking your progress to get personalized insights!</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="recommendation-card">
+                <h6 class="mb-3"><i class="fas fa-star me-2"></i> Recommendations</h6>
+                <ul class="list-unstyled small">
+                    {% for recommendation in recommendations %}
+                    <li class="mb-2"><i class="fas fa-check me-2"></i>{{ recommendation }}</li>
+                    {% empty %}
+                    <li>Complete more goals and tasks to get personalized recommendations!</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Upcoming Deadlines -->
+            <div class="card progress-card mb-4">
+                <div class="card-header bg-white">
+                    <i class="fas fa-calendar-alt me-2"></i> Upcoming Deadlines
+                </div>
+                <div class="card-body">
+                    {% for deadline in upcoming_deadlines %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                        <div>
+                            <small class="fw-bold">{{ deadline.title }}</small><br>
+                            <small class="text-muted">{{ deadline.type }}</small>
+                        </div>
+                        <span class="badge bg-{{ deadline.urgency }}">
+                            {{ deadline.days_left }} days
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No upcoming deadlines.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Weekly Goal -->
+            <div class="card progress-card">
+                <div class="card-header bg-white">
+                    <i class="fas fa-target me-2"></i> This Week's Goal
+                </div>
+                <div class="card-body text-center">
+                    <div class="stat-number text-primary">{{ weekly_goal_hours }}h</div>
+                    <div class="stat-label">Study Hours Target</div>
+                    <div class="progress progress-bar-custom mt-3">
+                        <div class="progress-bar bg-primary" style="width: {{ weekly_progress }}%">
+                            {{ weekly_progress }}%
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ current_week_hours }}h completed this week</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Progress Report loaded successfully');
+    });
+</script>
+{% endblock %}

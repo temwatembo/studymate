@@ -4,116 +4,411 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% endblock %}Studymate - Make studying fun and worthwhile</title>
+    <title>{% block title %}{% endblock %}StudyMate - Make studying fun and worthwhile</title>
     {% load bootstrap5 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #5855eb;
+            --surface-color: rgba(255, 255, 255, 0.8);
+            --surface-hover: rgba(255, 255, 255, 0.9);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.2);
+            --shadow-light: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --blur-effect: blur(12px);
         }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* Scale the contents down to 80% */
-.content-wrapper {
-    transform: scale(0.9); /* Scale down to 80% */
-    transform-origin: top center; /* Anchor scaling to the top center */
-    margin: 0 auto; /* Center the content horizontally */
-    font-size: 90%; /* Slightly reduce font size for better scaling */
-    max-width: 100%; /* Ensure it doesn’t overflow */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 400;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        /* Dynamic glass background with floating elements */
+        .study-background {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+        }
+
+  
+        /* Floating animations */
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -40px) rotate(90deg); }
+            50% { transform: translate(-20px, -80px) rotate(180deg); }
+            75% { transform: translate(-50px, -40px) rotate(270deg); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-60px, 40px) scale(1.1); }
+            66% { transform: translate(40px, -30px) scale(0.9); }
+        }
+
+        @keyframes float3 {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-80px, 60px) rotate(180deg); }
+        }
+
+        @keyframes float4 {
+            0%, 100% { transform: translate(0, 0) rotate(45deg); }
+            25% { transform: translate(50px, -30px) rotate(135deg); }
+            50% { transform: translate(20px, -60px) rotate(225deg); }
+            75% { transform: translate(-30px, -30px) rotate(315deg); }
+        }
+
+        @keyframes float5 {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(40px, 20px); }
+            40% { transform: translate(-30px, 50px); }
+            60% { transform: translate(60px, -20px); }
+            80% { transform: translate(-20px, -40px); }
+        }
+
+        @keyframes float6 {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            30% { transform: translate(-40px, -50px) rotate(120deg); }
+            60% { transform: translate(70px, -20px) rotate(240deg); }
+        }
+
+        /* Background overlay for depth */
+        .study-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 80% 60%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.06) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Enhanced glassmorphism navigation */
+        .modern-nav {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            margin: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .modern-nav:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Logo styling - glass effect */
+        .brand-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.95);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand-logo:hover {
+            color: rgba(255, 255, 255, 1);
+            transform: translateX(2px);
+        }
+
+        .brand-logo i {
+            color: rgba(255, 255, 255, 0.9);
+            margin-right: 8px;
+            font-size: 1.25rem;
+        }
+
+        /* Modern navigation items */
+        .nav-item .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 12px 20px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .nav-item .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .nav-item .nav-link i {
+            font-size: 1.1rem;
+            margin-right: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item .nav-link:hover i {
+            transform: scale(1.2);
+        }
+
+        /* Glass logout button */
+        .modern-logout {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            font-size: 0.875rem;
+        }
+
+        .modern-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            color: rgba(255, 255, 255, 1);
+        }
+
+        .modern-logout i {
+            margin-right: 6px;
+        }
+
+        /* Mobile toggle button */
+        .navbar-toggler {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .navbar-toggler:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: scale(1.1);
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2833, 37, 41, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Content container */
+        .content-container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            margin: 0 20px 20px;
+            padding: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .modern-nav {
+                margin: 15px;
+                border-radius: 16px;
+            }
+
+            .brand-logo {
+                font-size: 1.5rem;
+            }
+
+            .brand-logo i {
+                font-size: 1.75rem;
+                margin-right: 8px;
+            }
+
+            .main-content {
+                margin: 0 15px 15px;
+                padding: 24px;
+                border-radius: 16px;
+            }
+
+            .nav-item .nav-link {
+                padding: 10px 16px;
+                justify-content: center;
+            }
+
+            .modern-logout {
+                width: 100%;
+                justify-content: center;
+                margin-top: 12px;
+            }
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Focus states for accessibility */
+        .nav-link:focus,
+        .modern-logout:focus {
+            outline: 2px solid rgba(102, 126, 234, 0.5);
+            outline-offset: 2px;
+        }
+
+        /* Loading animation for page transitions */
+        .page-transition {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3); /* Adjust for contrast */
+  transform: scale(0);
+  animation: ripple-animation 0.6s ease-out;
+  pointer-events: none;
 }
 
-/* Optional: Body adjustments to ensure centering */
-body, html {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center; /* Horizontally center */
-    align-items: flex-start; /* Keep content aligned to the top */
-    overflow-x: hidden; /* Prevent horizontal overflow */
+@keyframes ripple-animation {
+  to {
+    transform: scale(1.5); /* Less expansion = better control */
+    opacity: 0;
+  }
 }
 
-
-.study-background {
-    background-color: #f4f6f9;
-    background-image: 
-        linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size: 30px 30px;
-    position: relative;
-    min-height: 100vh; /* Ensure it fills the viewport */
-}
-
-.study-background::before,
-.study-background::after {
-    pointer-events: none; /* Prevent interference */
-    z-index: -1; /* Ensure they stay in the background */
-}
-
-main {
-    position: relative;
-    overflow-y: auto; /* Allow scrolling */
-}
-
-
-       
     </style>
 </head>
 
-<body class="study-background min-vh-100">
-   <div class="container px-4 py-3">
-    <header class="py-4">
-        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-            <div class="container-fluid">
-                <!-- Logo on the left -->
-                <a class="navbar-brand fs-4 fw-bold text-dark" href="/dashboard">
-                    <i class="fas fa-graduation-cap me-2"></i>StudyMate
-                </a>
-                
-                <!-- Toggler for mobile -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-           
-                <!-- Navigation links on the right -->
-                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                    <ul class="navbar-nav align-items-center">
-                        <li class="nav-item me-3">
-                            <a class="nav-link text-muted" href="{% url 'goals:goal_list' %}">
-                                <i class="fas fa-bullseye  me-2"></i>Goals
-                            </a>
-                        </li>
-                        <li class="nav-item me-3">
-                            <a class="nav-link text-muted" href="{% url 'study_sessions:study_session_list' %}">
-                                <i class="fas fa-clock  me-2"></i>Study Sessions
-                            </a>
-                        </li>
-                        <li class="nav-item me-3">
-                            <a class="nav-link text-muted" href="{% url 'tasks:task_list' %}">
-                                <i class="fas fa-tasks  me-2"></i>Tasks
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/logout" class="btn btn-outline-primary rounded-pill">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
+<body class="study-background">
+    <!-- Floating glass shapes -->
 
-    <div class="content-wrapper ">
-        <main class="py-5">
-           {% block content %} {% endblock %} 
-        </main>
-     </div>
-   </div>
+    <div class="page-transition">
+        <header>
+            <nav class="navbar navbar-expand-lg modern-nav">
+                <div class="container-fluid px-4">
+                    <!-- Modern Logo -->
+                    <a class="brand-logo" href="/dashboard">
+                        <i class="fas fa-graduation-cap"></i>StudyMate
+                    </a>
+                    
+                    <!-- Mobile Toggle -->
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+               
+                    <!-- Navigation Links -->
+                    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                        <ul class="navbar-nav align-items-center">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/progress-report/">
+                                    <i class="fas fa-chart-line me-2"></i> My Progress
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'goals:goal_list' %}">
+                                    <i class="fas fa-bullseye"></i>Goals
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'study_sessions:study_session_list' %}">
+                                    <i class="fas fa-clock"></i>Study Sessions
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'tasks:task_list' %}">
+                                    <i class="fas fa-tasks"></i>Tasks
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/logout" class="modern-logout">
+                                    <i class="fas fa-sign-out-alt"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <div class="content-container">
+            <main class="main-content">
+                {% block content %}
+              
+                {% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Add smooth interactions
+       document.addEventListener('DOMContentLoaded', function() {
+    const buttons = document.querySelectorAll('.modern-logout, .nav-link');
+
+    buttons.forEach(button => {
+        button.style.position = 'relative';
+        button.style.overflow = 'hidden';
+
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+
+            const rect = button.getBoundingClientRect();
+            const size = 80; // 🔹 Smaller fixed size ripple
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+
+            button.appendChild(ripple);
+
+            setTimeout(() => ripple.remove(), 600);
+        });
+    });
+});
+
+    </script>
 </body>
 </html>

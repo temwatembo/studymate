@@ -4,102 +4,172 @@
 {% block title %}Goals{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="mb-4">Goal List</h1>
-    <a href="{% url 'goals:goal_create' %}" class="btn btn-primary mb-3">Add Goal</a>
-    
-    <!-- Responsive Table Wrapper for Small Screens -->
-    <div class="table-responsive d-md-none">
-        <table class="table table-striped table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>#</th>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Due Date</th>
-                    <th>Progress</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for goal in goals %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ goal.goal_title }}</td>
-                    <td>{{ goal.description }}</td>
-                    <td>{{ goal.due_date }}</td>
-                    <td>
-                        <span class="badge 
-                            {% if goal.progress_percentage == 'High' %}bg-danger{% elif goal.progress_percentage == 'Medium' %}bg-warning{% else %}bg-success{% endif %}">
-                            {{ goal.progress_progress_percentage }} %
-                        </span>
-                    </td>
-                    <td class="text-center">
-                        <!-- Actions Dropdown -->
-                        <div class="dropdown">
-                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Actions
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'goals:goal_update' goal.id %}">Edit</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="{% url 'goals:goal_delete' goal.id %}">Delete</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<style>
+    body {
+        background-color: #f4f7fa;
+    }
+
+    .card-container {
+        max-width: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        backdrop-filter: blur(10px);
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #444;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.4em 0.8em;
+        border-radius: 999px;
+        color: #fff;
+    }
+
+    .badge-progress-low {
+        background: linear-gradient(to right, #56ccf2, #2f80ed);
+    }
+
+    .badge-progress-medium {
+        background: linear-gradient(to right, #f2994a, #f2c94c);
+        color: #222;
+    }
+
+    .badge-progress-high {
+        background: linear-gradient(to right, #eb5757, #ff416c);
+    }
+
+    .badge-status-pending {
+        background-color: #6c757d;
+    }
+
+    .badge-status-in_progress {
+        background-color: #0d6efd;
+    }
+
+    .badge-status-completed {
+        background-color: #28a745;
+    }
+
+    .dropdown-menu {
+        z-index: 9999;
+        animation: fadeIn 0.25s ease-in-out;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-item {
+        padding: 0.7rem 1.2rem;
+        font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f1f3f5;
+    }
+
+    .btn-add-goal {
+        background: linear-gradient(to right, #2f80ed, #56ccf2);
+        border: none;
+        color: #fff;
+        padding: 0.6rem 1.4rem;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-add-goal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(47, 128, 237, 0.3);
+    }
+
+</style>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">🎯 Your Goals</h2>
+        <a href="{% url 'goals:goal_create' %}" class="btn btn-add-goal">+ Add Goal</a>
     </div>
-    
-    <!-- Standard Table for Medium and Larger Screens -->
-    <table class="table table-striped table-hover align-middle d-none d-md-table">
-        <thead class="table-dark">
-            <tr>
-                <th>#</th>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Due Date</th>
-                <th>progress</th>
-                <th class="text-center">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for goal in goals %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ goal.goal_title }}</td>
-                <td>{{ goal.description }}</td>
-                <td>{{ goal.due_date }}</td>
-                <td>
-                    <span class="badge 
-                        {% if goal.progress_percentage == 'High' %}bg-danger{% elif goal.progress_percentage == 'Medium' %}bg-warning{% else %}bg-success{% endif %}">
-                        {{ goal.progress_percentage }} %
-                    </span>
-                </td>
-                <td class="text-center">
-                    <!-- Actions Dropdown -->
-                    <div class="dropdown">
-                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Actions
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" href="{% url 'goals:goal_update' goal.id %}">Edit</a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item text-danger" href="{% url 'goals:goal_delete' goal.id %}">Delete</a>
-                            </li>
-                        </ul>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+    <div class="card-container">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Due Date</th>
+                        <th>Progress</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for goal in goals %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="fw-semibold">{{ goal.goal_title }}</td>
+                        <td class="text-muted">{{ goal.description }}</td>
+                        <td>{{ goal.due_date }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if goal.progress_percentage == 'High' %}badge-progress-high
+                                {% elif goal.progress_percentage == 'Medium' %}badge-progress-medium
+                                {% else %}badge-progress-low{% endif %}">
+                                {{ goal.progress_percentage }}%
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                badge-status-{{ goal.status }}">
+                                {{ goal.status|title }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    ⋮
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'goals:goal_update' goal.id %}">✏️ Edit</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="{% url 'goals:goal_delete' goal.id %}">🗑️ Delete</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">No goals available yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
