@@ -186,10 +186,10 @@
                     </div>
                     <h6>Set Your First Goal</h6>
                     <p class="text-sm">Start your learning journey by setting meaningful goals</p>
-                    <button class="btn-premium">
+                    <a href="{% url 'goals:goal_create' %}" class="btn-premium">
                         <i class="fas fa-plus me-2"></i>
                         Create Goal
-                    </button>
+                    </a>
                 </div>
                 {% endfor %}
             </div>
@@ -301,10 +301,10 @@
                         </div>
                         <h6>No Tasks Yet</h6>
                         <p class="text-sm">Create your first task to get started</p>
-                        <button class="btn-premium">
+                        <a href="{% url 'tasks:task_create' %}" class="btn-premium">
                             <i class="fas fa-plus me-2"></i>
                             Add Task
-                        </button>
+                        </a>
                     </div>
                     {% endfor %}
                 </div>
