@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password  # Import make_password for hashing passwords
 from .models import User
@@ -13,18 +13,31 @@ from django.db.models import Q, Avg, Count, Sum
 from django.utils import timezone
 from datetime import datetime, timedelta
 from collections import defaultdict
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.shortcuts import render, redirect
+import json
+
 
 def login_view(request):
     if request.method == 'POST':
-        email = request.POST['email']
-        password = request.POST['password']
+        email = request.POST.get('email')
+        password = request.POST.get('password')
         user = authenticate(request, email=email, password=password)
+
         if user is not None:
             login(request, user)
-            return redirect('dashboard')
+
+            # Redirect based on user role
+            if user.is_staff or user.is_superuser:
+                return redirect('admin_dashboard')  # Replace with your actual admin page
+            else:
+                return redirect('dashboard')
         else:
             messages.error(request, 'Invalid email or password.')
+
     return render(request, 'core_pages/login.html')
+
 
 def logout_view(request):
     logout(request)
@@ -391,3 +404,250 @@ def get_upcoming_deadlines(goals, tasks):
     # Sort by due date and return top 8
     upcoming.sort(key=lambda x: x['due_date'])
     return upcoming[:8]
+
+# Helper function to check if the user is staff or superuser
+def is_admin_user(user):
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+@user_passes_test(is_admin_user, login_url='dashboard')  # redirect unauthorized users
+def admin_dashboard(request):
+    # Get current date and time
+    now = timezone.now()
+    today = now.date()
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    
+    # Total users count
+    total_users = User.objects.count()
+    
+    # Active users (users who logged in within the last 7 days)
+    # Note: This requires you to track last_login or create a UserActivity model
+    active_users = User.objects.filter(last_login__gte=week_ago).count() if hasattr(User, 'last_login') else 0
+    
+    # New users this month
+    new_users_this_month = User.objects.filter(created_at__gte=month_ago).count()
+    
+    # Staff members count
+    staff_count = User.objects.filter(is_staff=True).count()
+    
+    # Superusers count
+    superuser_count = User.objects.filter(is_superuser=True).count()
+    
+    # User registration trend (last 7 days)
+    registration_trend = []
+    for i in range(7):
+        date = today - timedelta(days=i)
+        count = User.objects.filter(created_at__date=date).count()
+        registration_trend.append({
+            'date': date.strftime('%m/%d'),
+            'count': count
+        })
+    registration_trend.reverse()  # Most recent first
+    
+    # User role distribution
+    regular_users = total_users - staff_count
+    
+    context = {
+        'total_users': total_users,
+        'active_users': active_users,
+        'new_users_this_month': new_users_this_month,
+        'staff_count': staff_count,
+        'superuser_count': superuser_count,
+        'regular_users': regular_users,
+        'registration_trend': registration_trend,
+        'current_time': now,
+    }
+    
+    return render(request, 'core_pages/admin/admin_dashboard.html', context)
+
+
+@login_required
+def users_list(request):
+    users = User.objects.all().order_by('-created_at')  # Or filter as needed
+    print(users.query)
+    return render(request, 'core_pages/admin/users_list.html', {'users': users})
+
+
+
+
+@login_required
+@user_passes_test(is_admin_user, login_url='dashboard')  # redirect unauthorized users
+def analytics_dashboard(request):
+    # Get current date and time ranges
+    now = timezone.now()
+    today = now.date()
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    three_months_ago = today - timedelta(days=90)
+    year_ago = today - timedelta(days=365)
+    
+    # User Registration Analytics
+    total_users = User.objects.count()
+    users_this_week = User.objects.filter(created_at__gte=week_ago).count()
+    users_this_month = User.objects.filter(created_at__gte=month_ago).count()
+    users_this_quarter = User.objects.filter(created_at__gte=three_months_ago).count()
+    
+    # Calculate growth rates
+    users_last_week = User.objects.filter(
+        created_at__gte=week_ago - timedelta(days=7),
+        created_at__lt=week_ago
+    ).count()
+    users_last_month = User.objects.filter(
+        created_at__gte=month_ago - timedelta(days=30),
+        created_at__lt=month_ago
+    ).count()
+    
+    weekly_growth = ((users_this_week - users_last_week) / max(users_last_week, 1)) * 100
+    monthly_growth = ((users_this_month - users_last_month) / max(users_last_month, 1)) * 100
+    
+    # User Activity Analytics
+    active_users_week = User.objects.filter(last_login__gte=week_ago).count() if hasattr(User, 'last_login') else 0
+    active_users_month = User.objects.filter(last_login__gte=month_ago).count() if hasattr(User, 'last_login') else 0
+    
+    # User Role Distribution
+    superusers = User.objects.filter(is_superuser=True).count()
+    staff_users = User.objects.filter(is_staff=True, is_superuser=False).count()
+    regular_users = total_users - superusers - staff_users
+    
+    # Monthly Registration Data (Last 12 months)
+    monthly_registrations = []
+    for i in range(12):
+        start_date = (today.replace(day=1) - timedelta(days=30*i)).replace(day=1)
+        if i == 0:
+            end_date = today
+        else:
+            next_month = start_date.replace(month=start_date.month % 12 + 1) if start_date.month < 12 else start_date.replace(year=start_date.year + 1, month=1)
+            end_date = next_month - timedelta(days=1)
+        
+        count = User.objects.filter(
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        ).count()
+        
+        monthly_registrations.append({
+            'month': start_date.strftime('%b %Y'),
+            'count': count,
+            'date': start_date.isoformat()
+        })
+    
+    monthly_registrations.reverse()  # Most recent first
+    
+    # Weekly Registration Data (Last 8 weeks)
+    weekly_registrations = []
+    for i in range(8):
+        start_date = today - timedelta(days=7*(i+1))
+        end_date = today - timedelta(days=7*i)
+        
+        count = User.objects.filter(
+            created_at__date__gte=start_date,
+            created_at__date__lt=end_date
+        ).count()
+        
+        weekly_registrations.append({
+            'week': f"Week {i+1}",
+            'period': f"{start_date.strftime('%m/%d')} - {end_date.strftime('%m/%d')}",
+            'count': count
+        })
+    
+    weekly_registrations.reverse()
+    
+    # Daily Registration Data (Last 30 days)
+    daily_registrations = []
+    for i in range(30):
+        date = today - timedelta(days=i)
+        count = User.objects.filter(created_at__date=date).count()
+        daily_registrations.append({
+            'date': date.strftime('%m/%d'),
+            'full_date': date.isoformat(),
+            'count': count,
+            'day_name': date.strftime('%a')
+        })
+    
+    daily_registrations.reverse()
+    
+    # Top Registration Days (Day of week analysis)
+    day_of_week_stats = []
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    for i, day in enumerate(days):
+        count = User.objects.filter(created_at__week_day=i+2).count()  # Django week_day starts from Sunday=1
+        day_of_week_stats.append({
+            'day': day,
+            'count': count,
+            'percentage': (count / max(total_users, 1)) * 100
+        })
+    
+    # User Engagement Metrics
+    engagement_metrics = {
+        'total_users': total_users,
+        'active_this_week': active_users_week,
+        'active_this_month': active_users_month,
+        'engagement_rate_week': (active_users_week / max(total_users, 1)) * 100,
+        'engagement_rate_month': (active_users_month / max(total_users, 1)) * 100,
+    }
+    
+    # Recent Activity Summary
+    recent_activity = []
+    
+    # Get recent registrations
+    recent_users = User.objects.order_by('-created_at')[:5]
+    for user in recent_users:
+        recent_activity.append({
+            'type': 'registration',
+            'message': f"New user {user.first_name or user.last_name} registered",
+            'time': user.created_at,
+            'icon': 'person-plus',
+            'color': 'success'
+        })
+    
+    # Sort by time
+    recent_activity.sort(key=lambda x: x['time'], reverse=True)
+    recent_activity = recent_activity[:10]  # Limit to 10 items
+    
+    # Prepare data for charts (convert to JSON for JavaScript)
+    chart_data = {
+        'monthly_registrations': json.dumps(monthly_registrations),
+        'weekly_registrations': json.dumps(weekly_registrations),
+        'daily_registrations': json.dumps(daily_registrations),
+        'day_of_week_stats': json.dumps(day_of_week_stats),
+        'role_distribution': json.dumps([
+            {'label': 'Regular Users', 'value': regular_users, 'color': '#667eea'},
+            {'label': 'Staff', 'value': staff_users, 'color': '#764ba2'},
+            {'label': 'Superusers', 'value': superusers, 'color': '#f093fb'}
+        ])
+    }
+    
+    context = {
+        # Basic metrics
+        'total_users': total_users,
+        'users_this_week': users_this_week,
+        'users_this_month': users_this_month,
+        'users_this_quarter': users_this_quarter,
+        'weekly_growth': round(weekly_growth, 1),
+        'monthly_growth': round(monthly_growth, 1),
+        
+        # Activity metrics
+        'active_users_week': active_users_week,
+        'active_users_month': active_users_month,
+        'engagement_metrics': engagement_metrics,
+        
+        # Role distribution
+        'superusers': superusers,
+        'staff_users': staff_users,
+        'regular_users': regular_users,
+        
+        # Chart data
+        'chart_data': chart_data,
+        'monthly_registrations': monthly_registrations,
+        'weekly_registrations': weekly_registrations,
+        'daily_registrations': daily_registrations,
+        'day_of_week_stats': day_of_week_stats,
+        
+        # Activity
+        'recent_activity': recent_activity,
+        
+        # Metadata
+        'current_time': now,
+        'report_period': f"{month_ago.strftime('%B %d, %Y')} - {today.strftime('%B %d, %Y')}"
+    }
+    
+    return render(request, 'core_pages/admin/analytics.html', context)

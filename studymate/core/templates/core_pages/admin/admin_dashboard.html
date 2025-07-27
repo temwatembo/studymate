@@ -1,0 +1,233 @@
+{% extends 'core_pages/admin/admin_base.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="welcome-text">Welcome back, {{ request.user.first_name|default:"Admin" }}! 👋</h1>
+            <p class="welcome-subtitle">Here's what's happening with StudyMate today</p>
+        </div>
+        <div class="text-end">
+            <div class="text-muted small">Last updated</div>
+            <div class="fw-semibold">{{ current_time|date:"M d, Y - H:i" }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Metrics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-icon primary">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="metric-value">{{ total_users|default:"0" }}</div>
+            <div class="metric-label">Total Users</div>
+            <div class="metric-change positive">
+                <i class="bi bi-arrow-up"></i>
+                +{{ new_users_this_month }} this month
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-icon success">
+                <i class="bi bi-activity"></i>
+            </div>
+            <div class="metric-value">{{ active_users|default:"0" }}</div>
+            <div class="metric-label">Active Users</div>
+            <div class="metric-change positive">
+                <i class="bi bi-arrow-up"></i>
+                Last 7 days
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-icon warning">
+                <i class="bi bi-shield-fill-check"></i>
+            </div>
+            <div class="metric-value">{{ staff_count|default:"0" }}</div>
+            <div class="metric-label">Staff Members</div>
+            <div class="metric-change">
+                <i class="bi bi-info-circle"></i>
+                {{ superuser_count }} superusers
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-icon info">
+                <i class="bi bi-person-fill"></i>
+            </div>
+            <div class="metric-value">{{ regular_users|default:"0" }}</div>
+            <div class="metric-label">Regular Users</div>
+            <div class="metric-change">
+                <i class="bi bi-info-circle"></i>
+                Non-staff users
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Content Row -->
+<div class="row g-4">
+    <!-- Registration Trend Chart -->
+    <div class="col-lg-8">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 fw-bold">Registration Trend</h5>
+                <span class="badge" style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: white;">Last 7 Days</span>
+            </div>
+            
+            <div class="row g-3">
+                {% for day in registration_trend %}
+                <div class="col">
+                    <div class="text-center">
+                        <div class="small text-muted mb-1">{{ day.date }}</div>
+                        <div class="d-flex justify-content-center align-items-end" style="height: 60px;">
+                            <div 
+                                style="
+                                    width: 20px; 
+                                    height: {% if day.count > 0 %}{{ day.count|add:10 }}px{% else %}5px{% endif %}; 
+                                    background: linear-gradient(180deg, var(--primary-color), var(--accent-color));
+                                    border-radius: 10px 10px 0 0;
+                                    min-height: 5px;
+                                "
+                            ></div>
+                        </div>
+                        <div class="small fw-semibold mt-1">{{ day.count }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="col-lg-4">
+        <div class="metric-card">
+            <h5 class="mb-4 fw-bold">Quick Stats</h5>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3" style="background: rgba(102, 126, 234, 0.1);">
+                <div>
+                    <div class="fw-semibold">User Growth</div>
+                    <div class="small text-muted">This month</div>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold" style="color: var(--primary-color);">+{{ new_users_this_month }}%</div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3" style="background: rgba(72, 187, 120, 0.1);">
+                <div>
+                    <div class="fw-semibold">Active Rate</div>
+                    <div class="small text-muted">User engagement</div>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold" style="color: var(--success-color);">
+                        {% if total_users > 0 %}
+                            {{ active_users|floatformat:0 }}/{{ total_users }}
+                        {% else %}
+                            0/0
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(237, 137, 54, 0.1);">
+                <div>
+                    <div class="fw-semibold">Admin Coverage</div>
+                    <div class="small text-muted">Staff ratio</div>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold" style="color: var(--warning-color);">
+                        {% if total_users > 0 %}
+                            {% widthratio staff_count total_users 100 %}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Status -->
+<div class="status-section">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-2 fw-bold">System Status</h4>
+            <p class="text-muted mb-0">All StudyMate systems are running smoothly. No incidents reported in the last 24 hours.</p>
+        </div>
+        <div>
+            <span class="status-indicator">
+                <i class="bi bi-check-circle-fill"></i>
+                All Systems Operational
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mt-2">
+    <div class="col-md-6">
+        <div class="metric-card">
+            <h5 class="mb-3 fw-bold">Quick Actions</h5>
+            <div class="d-grid gap-2">
+                <a href="{% url 'users_list' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-people-fill me-2"></i>
+                    Manage Users
+                </a>
+                <a href="#" class="btn btn-outline-success btn-lg">
+                    <i class="bi bi-plus-circle-fill me-2"></i>
+                    Add New Course
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="metric-card">
+            <h5 class="mb-3 fw-bold">Recent Activity</h5>
+            <div class="list-group list-group-flush">
+                <div class="list-group-item border-0 px-0">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-success me-3" style="width: 8px; height: 8px;"></div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold small">New user registration</div>
+                            <div class="text-muted small">2 minutes ago</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-group-item border-0 px-0">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-primary me-3" style="width: 8px; height: 8px;"></div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold small">System backup completed</div>
+                            <div class="text-muted small">1 hour ago</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-group-item border-0 px-0">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-warning me-3" style="width: 8px; height: 8px;"></div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold small">Course content updated</div>
+                            <div class="text-muted small">3 hours ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
