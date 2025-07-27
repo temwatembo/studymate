@@ -140,14 +140,32 @@
         }
 
         /* Main Content */
-       .main-content {
+   .main-content {
     margin-left: calc(var(--sidebar-width) + 1rem);
     width: calc(100% - var(--sidebar-width) - 1rem);
     min-height: 100vh;
     padding: 2rem;
     background: var(--light-bg);
+    transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
+/* Tablet styles */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 1.5rem;
+    }
+}
+
+/* Mobile styles */
+@media (max-width: 576px) {
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 1rem;
+    }
+}
         .content-header {
             background: var(--card-bg);
             padding: 2rem;
