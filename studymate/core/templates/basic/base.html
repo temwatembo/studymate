@@ -18,6 +18,14 @@
             --glass-border: rgba(255, 255, 255, 0.2);
             --text-primary: #1a1a2e;
             --text-secondary: #6c757d;
+            --primary-gradient2: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient2: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --chat-bg: rgba(255, 255, 255, 0.98);
+            --user-msg-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bot-msg-bg: rgba(255, 255, 255, 0.95);
+            --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.15);
         }
 
         * {
@@ -408,6 +416,8 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.5);
         }
+
+
     </style>
 </head>
 <body>
@@ -451,6 +461,7 @@
      {% block content %} {% endblock %}
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  
     
     <script>
         // Create floating particles
