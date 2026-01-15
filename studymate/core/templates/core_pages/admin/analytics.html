@@ -1,0 +1,466 @@
+{% extends 'core_pages/admin/admin_base.html' %}
+{% load static %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="welcome-text">Analytics Dashboard 📊</h1>
+            <p class="welcome-subtitle">Comprehensive insights and metrics for StudyMate</p>
+        </div>
+        <div class="text-end">
+            <div class="text-muted small">Report Period</div>
+            <div class="fw-semibold">{{ report_period }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Metrics Row -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-icon primary">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="metric-value">{{ total_users|default:"0" }}</div>
+            <div class="metric-label">Total Users</div>
+            <div class="metric-change {% if monthly_growth >= 0 %}positive{% else %}negative{% endif %}">
+                <i class="bi bi-arrow-{% if monthly_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                {{ monthly_growth|floatformat:1 }}% this month
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-icon success">
+                <i class="bi bi-person-plus-fill"></i>
+            </div>
+            <div class="metric-value">{{ users_this_month|default:"0" }}</div>
+            <div class="metric-label">New This Month</div>
+            <div class="metric-change {% if weekly_growth >= 0 %}positive{% else %}negative{% endif %}">
+                <i class="bi bi-arrow-{% if weekly_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                {{ weekly_growth|floatformat:1 }}% weekly
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-icon warning">
+                <i class="bi bi-activity"></i>
+            </div>
+            <div class="metric-value">{{ active_users_month|default:"0" }}</div>
+            <div class="metric-label">Active Users</div>
+            <div class="metric-change">
+                <i class="bi bi-info-circle"></i>
+                {{ engagement_metrics.engagement_rate_month|floatformat:1 }}% engagement
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-icon info">
+                <i class="bi bi-calendar-week"></i>
+            </div>
+            <div class="metric-value">{{ users_this_week|default:"0" }}</div>
+            <div class="metric-label">This Week</div>
+            <div class="metric-change">
+                <i class="bi bi-info-circle"></i>
+                {{ users_this_quarter }} this quarter
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <!-- Monthly Registration Trend -->
+    <div class="col-lg-8">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 fw-bold">Registration Trends</h5>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="chartPeriod" id="monthly" checked>
+                    <label class="btn btn-outline-primary btn-sm" for="monthly">Monthly</label>
+                    
+                    <input type="radio" class="btn-check" name="chartPeriod" id="weekly">
+                    <label class="btn btn-outline-primary btn-sm" for="weekly">Weekly</label>
+                    
+                    <input type="radio" class="btn-check" name="chartPeriod" id="daily">
+                    <label class="btn btn-outline-primary btn-sm" for="daily">Daily</label>
+                </div>
+            </div>
+            
+            <!-- Chart Canvas -->
+            <div style="position: relative; height: 350px;">
+                <canvas id="registrationChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Role Distribution -->
+    <div class="col-lg-4">
+        <div class="metric-card">
+            <h5 class="mb-4 fw-bold">User Distribution</h5>
+            
+            <!-- Pie Chart -->
+            <div style="position: relative; height: 250px; margin-bottom: 2rem;">
+                <canvas id="roleChart"></canvas>
+            </div>
+            
+            <!-- Legend -->
+            <div class="d-flex flex-column gap-2">
+                <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: rgba(102, 126, 234, 0.1);">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded" style="width: 12px; height: 12px; background: #667eea;"></div>
+                        <span class="small fw-medium">Regular Users</span>
+                    </div>
+                    <span class="fw-bold">{{ regular_users }}</span>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: rgba(118, 75, 162, 0.1);">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded" style="width: 12px; height: 12px; background: #764ba2;"></div>
+                        <span class="small fw-medium">Staff Members</span>
+                    </div>
+                    <span class="fw-bold">{{ staff_users }}</span>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: rgba(240, 147, 251, 0.1);">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded" style="width: 12px; height: 12px; background: #f093fb;"></div>
+                        <span class="small fw-medium">Superusers</span>
+                    </div>
+                    <span class="fw-bold">{{ superusers }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Day of Week Analysis & Engagement Metrics -->
+<div class="row g-4 mb-4">
+    <!-- Day of Week Registration Pattern -->
+    <div class="col-lg-6">
+        <div class="metric-card">
+            <h5 class="mb-4 fw-bold">Registration by Day of Week</h5>
+            
+            <div class="d-flex flex-column gap-3">
+                {% for day_stat in day_of_week_stats %}
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="fw-medium">{{ day_stat.day }}</div>
+                    <div class="d-flex align-items-center gap-3" style="width: 60%;">
+                        <div class="progress flex-grow-1" style="height: 8px;">
+                            <div class="progress-bar" 
+                                 style="width: {{ day_stat.percentage }}%; background: linear-gradient(90deg, var(--primary-color), var(--accent-color));">
+                            </div>
+                        </div>
+                        <div class="text-end" style="min-width: 60px;">
+                            <div class="fw-bold">{{ day_stat.count }}</div>
+                            <div class="small text-muted">{{ day_stat.percentage|floatformat:1 }}%</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Engagement Metrics -->
+    <div class="col-lg-6">
+        <div class="metric-card">
+            <h5 class="mb-4 fw-bold">Engagement Metrics</h5>
+            
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="text-center p-3 rounded-3" style="background: rgba(72, 187, 120, 0.1);">
+                        <div class="fw-bold text-success display-6">{{ engagement_metrics.engagement_rate_week|floatformat:0 }}%</div>
+                        <div class="small text-muted">Weekly Engagement</div>
+                        <div class="small fw-medium">{{ engagement_metrics.active_this_week }}/{{ total_users }} users</div>
+                    </div>
+                </div>
+                
+                <div class="col-6">
+                    <div class="text-center p-3 rounded-3" style="background: rgba(102, 126, 234, 0.1);">
+                        <div class="fw-bold text-primary display-6">{{ engagement_metrics.engagement_rate_month|floatformat:0 }}%</div>
+                        <div class="small text-muted">Monthly Engagement</div>
+                        <div class="small fw-medium">{{ engagement_metrics.active_this_month }}/{{ total_users }} users</div>
+                    </div>
+                </div>
+            </div>
+            
+           <!-- Engagement Breakdown -->
+<div class="mt-4">
+    <h6 class="fw-bold mb-3">User Activity Breakdown</h6>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small">Highly Active (Daily)</span>
+        <span class="badge bg-success">{{ engagement_metrics.active_this_week|floatformat:0 }}</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small">Moderately Active (Weekly)</span>
+        <span class="badge bg-warning">{{ engagement_metrics.active_this_month|add:engagement_metrics.active_this_week|floatformat:0 }}</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center">
+        <span class="small">Inactive Users</span>
+        <span class="badge bg-secondary">{{ total_users|add:engagement_metrics.active_this_month|add:"-1"|floatformat:0 }}</span>
+    </div>
+</div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity & Export Tools -->
+<div class="row g-4">
+    <!-- Recent Activity -->
+    <div class="col-lg-8">
+        <div class="metric-card">
+            <h5 class="mb-4 fw-bold">Recent Activity</h5>
+            
+            <div class="list-group list-group-flush">
+                {% for activity in recent_activity %}
+                <div class="list-group-item border-0 px-0 py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 40px; height: 40px; background: rgba({% if activity.color == 'success' %}72, 187, 120{% elif activity.color == 'warning' %}237, 137, 54{% else %}102, 126, 234{% endif %}, 0.1);">
+                            <i class="bi bi-{{ activity.icon }} text-{{ activity.color }}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-medium">{{ activity.message }}</div>
+                            <div class="small text-muted">{{ activity.time|timesince }} ago</div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-clock display-4 mb-2"></i>
+                    <p>No recent activity to display</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Export & Tools -->
+    <div class="col-lg-4">
+        <div class="metric-card">
+            <h5 class="mb-4 fw-bold">Export & Tools</h5>
+            
+            <div class="d-grid gap-3">
+                <button class="btn btn-outline-primary btn-lg" onclick="exportChart('png')">
+                    <i class="bi bi-download me-2"></i>
+                    Export Charts as PNG
+                </button>
+                
+                <button class="btn btn-outline-success btn-lg" onclick="exportData('csv')">
+                    <i class="bi bi-file-earmark-excel me-2"></i>
+                    Export Data as CSV
+                </button>
+                
+                <button class="btn btn-outline-danger btn-lg" onclick="exportReport('pdf')">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>
+                    Generate PDF Report
+                </button>
+                
+                <hr>
+                
+                <button class="btn btn-outline-info btn-lg" onclick="refreshData()">
+                    <i class="bi bi-arrow-clockwise me-2"></i>
+                    Refresh Data
+                </button>
+            </div>
+            
+            <!-- Quick Stats -->
+          <div class="mt-4 pt-4 border-top">
+    <h6 class="fw-bold mb-3">Quick Stats</h6>
+    <div class="small text-muted mb-1">Average daily registrations</div>
+    <div class="fw-bold mb-3">{{ average_daily_registrations|floatformat:1 }} users/day</div>
+    
+    <div class="small text-muted mb-1">Peak registration day</div>
+    <div class="fw-bold">
+        {% for day_stat in day_of_week_stats %}
+            {% if forloop.first %}{{ day_stat.day }}{% endif %}
+        {% endfor %}
+    </div>
+</div>
+            
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<script>
+    // Chart data from Django
+    const chartData = {
+        monthly: {{ chart_data.monthly_registrations|safe }},
+        weekly: {{ chart_data.weekly_registrations|safe }},
+        daily: {{ chart_data.daily_registrations|safe }},
+        roleDistribution: {{ chart_data.role_distribution|safe }},
+        dayOfWeek: {{ chart_data.day_of_week_stats|safe }}
+    };
+
+    let registrationChart;
+    let roleChart;
+
+    // Initialize charts when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeCharts();
+        setupEventListeners();
+    });
+
+    function initializeCharts() {
+        // Registration Trend Chart
+        const ctx1 = document.getElementById('registrationChart').getContext('2d');
+        registrationChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: chartData.monthly.map(item => item.month),
+                datasets: [{
+                    label: 'New Registrations',
+                    data: chartData.monthly.map(item => item.count),
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#667eea',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverBackgroundColor: '#667eea'
+                    }
+                }
+            }
+        });
+
+        // Role Distribution Pie Chart
+        const ctx2 = document.getElementById('roleChart').getContext('2d');
+        roleChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.roleDistribution.map(item => item.label),
+                datasets: [{
+                    data: chartData.roleDistribution.map(item => item.value),
+                    backgroundColor: chartData.roleDistribution.map(item => item.color),
+                    borderWidth: 0,
+                    hoverBorderWidth: 2,
+                    hoverBorderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    }
+
+    function setupEventListeners() {
+        // Chart period toggle
+        document.querySelectorAll('input[name="chartPeriod"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                updateRegistrationChart(this.id);
+            });
+        });
+    }
+
+    function updateRegistrationChart(period) {
+        let data, labels;
+        
+        switch(period) {
+            case 'weekly':
+                data = chartData.weekly.map(item => item.count);
+                labels = chartData.weekly.map(item => item.week);
+                break;
+            case 'daily':
+                data = chartData.daily.map(item => item.count);
+                labels = chartData.daily.map(item => item.date);
+                break;
+            default: // monthly
+                data = chartData.monthly.map(item => item.count);
+                labels = chartData.monthly.map(item => item.month);
+        }
+        
+        registrationChart.data.labels = labels;
+        registrationChart.data.datasets[0].data = data;
+        registrationChart.update('active');
+    }
+
+    // Export functions
+    function exportChart(format) {
+        if (format === 'png') {
+            const link = document.createElement('a');
+            link.download = 'studymate-analytics-chart.png';
+            link.href = registrationChart.toBase64Image();
+            link.click();
+        }
+    }
+
+    function exportData(format) {
+        if (format === 'csv') {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Period,Registrations\n";
+            
+            chartData.monthly.forEach(item => {
+                csvContent += `${item.month},${item.count}\n`;
+            });
+            
+            const link = document.createElement('a');
+            link.setAttribute('href', encodeURI(csvContent));
+            link.setAttribute('download', 'studymate-analytics.csv');
+            link.click();
+        }
+    }
+
+    function exportReport(format) {
+        if (format === 'pdf') {
+            alert('PDF export feature coming soon!');
+        }
+    }
+
+    function refreshData() {
+        location.reload();
+    }
+</script>
+{% endblock %}

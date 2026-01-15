@@ -44,7 +44,13 @@ INSTALLED_APPS = [
     'apps.reminders',
     'bootstrap5',
     'adminlte3',
+    'crispy_forms',
+    'crispy_bootstrap5'
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -131,14 +137,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-# URL for referencing static files
 STATIC_URL = '/static/'
 
-# Directory for storing static files (useful for development)
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / 'core' / 'static',
 ]
 
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # For collectstatic in production
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 

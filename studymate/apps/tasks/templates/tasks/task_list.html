@@ -1,0 +1,167 @@
+{% extends 'basic/dashboard/main_nav.html' %}
+{% load static %}
+
+{% block title %}Tasks{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background-color: #f4f7fa;
+    }
+
+    .card-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+        backdrop-filter: blur(10px);
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.4em 0.8em;
+        border-radius: 999px;
+        color: #fff;
+    }
+
+    .badge-priority-low {
+        background: linear-gradient(to right, #6dd5ed, #2193b0);
+    }
+
+    .badge-priority-medium {
+        background: linear-gradient(to right, #f7971e, #ffd200);
+        color: #222;
+    }
+
+    .badge-priority-high {
+        background: linear-gradient(to right, #ff416c, #ff4b2b);
+    }
+
+    .badge-status-pending {
+        background-color: #6c757d;
+    }
+
+    .badge-status-in_progress {
+        background-color: #0d6efd;
+    }
+
+    .badge-status-completed {
+        background-color: #28a745;
+    }
+
+    .dropdown-menu {
+        z-index: 9999;
+        animation: fadeIn 0.25s ease-in-out;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-item {
+        padding: 0.7rem 1.2rem;
+        font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f1f3f5;
+    }
+
+    .btn-add-task {
+        background: linear-gradient(to right, #ff416c, #ff4b2b);
+        color: #fff;
+        padding: 0.6rem 1.4rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-add-task:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 65, 108, 0.3);
+    }
+</style>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">📝 Your Tasks</h2>
+        <a href="{% url 'tasks:task_create' %}" class="btn btn-add-task">+ Add Task</a>
+    </div>
+
+    <div class="card-container">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Due Date</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="fw-semibold">{{ task.task_title }}</td>
+                        <td class="text-muted">{{ task.description }}</td>
+                        <td>{{ task.due_date }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if task.priority_level == 'High' %}badge-priority-high
+                                {% elif task.priority_level == 'Medium' %}badge-priority-medium
+                                {% else %}badge-priority-low{% endif %}">
+                                {{ task.priority_level }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                badge-status-{{ task.status }}">
+                                {{ task.status|title }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    ⋮
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'tasks:task_update' task.id %}">✏️ Edit</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="{% url 'tasks:task_delete' task.id %}">🗑️ Delete</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">No tasks available yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

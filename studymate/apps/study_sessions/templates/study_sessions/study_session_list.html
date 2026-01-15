@@ -1,0 +1,121 @@
+{% extends 'basic/dashboard/main_nav.html' %}
+{% load static %}
+
+{% block title %}Study Sessions{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background-color: #f4f7fa;
+    }
+
+    .card-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+        backdrop-filter: blur(10px);
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .dropdown-menu {
+        z-index: 9999;
+        animation: fadeIn 0.25s ease-in-out;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-item {
+        padding: 0.7rem 1.2rem;
+        font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f1f3f5;
+    }
+
+    .btn-add-session {
+        background: linear-gradient(to right, #7F00FF, #E100FF);
+        color: #fff;
+        padding: 0.6rem 1.4rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-add-session:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(127, 0, 255, 0.3);
+    }
+</style>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">📚 Study Sessions</h2>
+        <a href="{% url 'study_sessions:study_session_create' %}" class="btn btn-add-session">+ Add Session</a>
+    </div>
+
+    <div class="card-container">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Subject</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Duration</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for study_session in sessions %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="fw-semibold">{{ study_session.subject }}</td>
+                        <td>{{ study_session.start_time }}</td>
+                        <td>{{ study_session.end_time }}</td>
+                        <td>{{ study_session.duration }}</td>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    ⋮
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'study_sessions:study_session_update' study_session.id %}">✏️ Edit</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="{% url 'study_sessions:study_session_delete' study_session.id %}">🗑️ Delete</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No study sessions yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

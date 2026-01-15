@@ -1,0 +1,301 @@
+{% extends 'core_pages/admin/admin_base.html' %}
+{% load static %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="welcome-text">User Management 👥</h1>
+            <p class="welcome-subtitle">Manage all StudyMate users from one place</p>
+        </div>
+        <div>
+            <button class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border: none;">
+                <i class="bi bi-person-plus-fill me-2"></i>
+                Add New User
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Filter and Search Section -->
+<div class="row g-4 mb-4">
+    <div class="col-md-8">
+        <div class="metric-card">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text bg-transparent border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 ps-0" placeholder="Search users by name, email..." id="userSearch">
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="metric-card">
+            <select class="form-select form-select-lg" id="roleFilter">
+                <option value="">All Roles</option>
+                <option value="superuser">Superusers</option>
+                <option value="staff">Staff</option>
+                <option value="user">Regular Users</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="metric-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0 fw-bold">All Users</h5>
+        <div class="d-flex gap-2">
+            <span class="badge bg-light text-dark px-3 py-2">{{ users|length }} total users</span>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots"></i>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-download me-2"></i>Export CSV</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-pdf me-2"></i>Export PDF</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-envelope me-2"></i>Send Bulk Email</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.1));">
+                <tr>
+                    <th scope="col" class="border-0 py-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAll">
+                        </div>
+                    </th>
+                    <th scope="col" class="border-0 py-3 text-muted text-uppercase small fw-bold">User</th>
+                    <th scope="col" class="border-0 py-3 text-muted text-uppercase small fw-bold">Email</th>
+                    <th scope="col" class="border-0 py-3 text-muted text-uppercase small fw-bold">Role</th>
+                    <th scope="col" class="border-0 py-3 text-muted text-uppercase small fw-bold">Joined</th>
+                    <th scope="col" class="border-0 py-3 text-muted text-uppercase small fw-bold">Status</th>
+                    <th scope="col" class="border-0 py-3 text-muted text-uppercase small fw-bold text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr class="user-row">
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input user-checkbox" type="checkbox" value="{{ user.id }}">
+                        </div>
+                    </td>
+                    
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="position-relative">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 45px; height: 45px; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: white; font-weight: 600;">
+                                    {{ user.first_name|slice:":1"|upper }}
+                                </div>
+                                {% if user.is_active %}
+                                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 12px; height: 12px; border: 2px solid white;"></span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="fw-semibold">{{ user.get_full_name }}</div>
+                                <div class="small text-muted">@{{ user.first_name }}</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="fw-medium">{{ user.email }}</div>
+                        {% if user.email and not user.email|length %}
+                        <div class="small text-warning">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            No email
+                        </div>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if user.is_superuser %}
+                            <span class="badge rounded-pill" style="background: linear-gradient(135deg, #dc3545, #e74c3c); color: white;">
+                                <i class="bi bi-shield-fill-check me-1"></i>
+                                Superuser
+                            </span>
+                        {% elif user.is_staff %}
+                            <span class="badge rounded-pill" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white;">
+                                <i class="bi bi-person-badge-fill me-1"></i>
+                                Staff
+                            </span>
+                        {% else %}
+                            <span class="badge rounded-pill bg-light text-dark border">
+                                <i class="bi bi-person-fill me-1"></i>
+                                User
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <div class="fw-medium">{{ user.date_joined|date:"M d, Y" }}</div>
+                        <div class="small text-muted">{{ user.date_joined|timesince }} ago</div>
+                    </td>
+
+                    <td>
+                        {% if user.is_active %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                                Active
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">
+                                <i class="bi bi-x-circle-fill me-1"></i>
+                                Inactive
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary" title="View Profile">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning" title="Edit User">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#"><i class="bi bi-envelope me-2"></i>Send Message</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="bi bi-key me-2"></i>Reset Password</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    {% if user.is_active %}
+                                    <li><a class="dropdown-item text-warning" href="#"><i class="bi bi-pause-circle me-2"></i>Deactivate</a></li>
+                                    {% else %}
+                                    <li><a class="dropdown-item text-success" href="#"><i class="bi bi-play-circle me-2"></i>Activate</a></li>
+                                    {% endif %}
+                                    <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <div class="text-muted">
+                            <i class="bi bi-people display-1 mb-3"></i>
+                            <h5>No users found</h5>
+                            <p>There are no users matching your criteria.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if users.has_other_pages %}
+    <div class="d-flex justify-content-between align-items-center mt-4 pt-4 border-top">
+        <div class="text-muted">
+            Showing {{ users.start_index }} to {{ users.end_index }} of {{ users.paginator.count }} users
+        </div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if users.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for num in users.paginator.page_range %}
+                {% if users.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if users.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.paginator.num_pages }}">Last &raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+<script>
+    // Search functionality
+    document.getElementById('userSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('.user-row');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Role filter
+    document.getElementById('roleFilter').addEventListener('change', function() {
+        const filterValue = this.value;
+        const rows = document.querySelectorAll('.user-row');
+        
+        rows.forEach(row => {
+            if (!filterValue) {
+                row.style.display = '';
+                return;
+            }
+            
+            const roleCell = row.cells[3];
+            const roleText = roleCell.textContent.toLowerCase();
+            
+            let shouldShow = false;
+            if (filterValue === 'superuser' && roleText.includes('superuser')) shouldShow = true;
+            if (filterValue === 'staff' && roleText.includes('staff') && !roleText.includes('superuser')) shouldShow = true;
+            if (filterValue === 'user' && !roleText.includes('staff') && !roleText.includes('superuser')) shouldShow = true;
+            
+            row.style.display = shouldShow ? '' : 'none';
+        });
+    });
+
+    // Select all functionality
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.user-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+
+    // Update select all when individual checkboxes change
+    document.querySelectorAll('.user-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const allCheckboxes = document.querySelectorAll('.user-checkbox');
+            const checkedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+            const selectAll = document.getElementById('selectAll');
+            
+            selectAll.checked = allCheckboxes.length === checkedCheckboxes.length;
+            selectAll.indeterminate = checkedCheckboxes.length > 0 && checkedCheckboxes.length < allCheckboxes.length;
+        });
+    });
+</script>

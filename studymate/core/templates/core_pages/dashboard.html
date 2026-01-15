@@ -1,39 +1,1855 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container mt-5">
-    <h1>Welcome, {{ request.user.first_name }}!</h1>
+{% extends 'basic/dashboard/main_nav.html' %}
+{% load static %}
 
-    <h2>Your Goals</h2>
-    <ul class="list-group">
-        {% for goal in user_goals %}
-            <li class="list-group-item">{{ goal.goal_title }} - {{ goal.progress_percentage }}%</li>
-        {% empty %}
-            <li class="list-group-item">No goals available</li>
-        {% endfor %}
-    </ul>
+{% block title %}Dashboard{% endblock %}
 
-    <h2 class="mt-4">Recent Study Sessions</h2>
-    <ul class="list-group">
-        {% for session in study_sessions %}
-            <li class="list-group-item">{{ session.subject }} from {{ session.start_time }} to {{ session.end_time }}</li>
-        {% empty %}
-            <li class="list-group-item">No study sessions recorded</li>
-        {% endfor %}
-    </ul>
+{% block content %}
+<!-- Animated Background -->
 
-    <h2 class="mt-4">Tasks</h2>
-    <ul class="list-group">
-        {% for task in tasks %}
-            <li class="list-group-item">{{ task.task_title }} - {{ task.status }}</li>
-        {% empty %}
-            <li class="list-group-item">No tasks available</li>
-        {% endfor %}
-    </ul>
+ <style>
+  .floating-text {
+            position: absolute;
+            top: -60px;
+            right: 80px;
+            font-size: 14px;
+            color: #fff;
+            background: var(--primary-gradient);
+            padding: 12px 18px;
+            border-radius: 25px;
+            box-shadow: var(--shadow-soft);
+            animation: floatAnimation 3s ease-in-out infinite;
+            white-space: nowrap;
+            backdrop-filter: blur(10px);
+        }
+
+        .floating-text::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 20px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #667eea;
+        }
+
+        @keyframes floatAnimation {
+            0%, 100% {
+                transform: translateY(0px) scale(1);
+                opacity: 0.9;
+            }
+            50% {
+                transform: translateY(-8px) scale(1.02);
+                opacity: 1;
+            }
+        }
+
+        .chatbot-icon {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 28px;
+            cursor: pointer;
+            z-index: 9999;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .chatbot-icon:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .chatbot-icon.active {
+            background: var(--secondary-gradient);
+            transform: rotate(180deg);
+        }
+
+        .chatbot-container {
+            position: fixed;
+            bottom: 120px;
+            right: 30px;
+            width: 600px;
+            max-width: calc(100vw - 60px);
+            background: var(--chat-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-soft);
+            z-index: 9999;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            transform: translateY(20px) scale(0.95);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chatbot-container.show {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .chatbot-header {
+            padding: 20px 25px;
+            background: var(--primary-gradient);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chatbot-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23pattern)"/></svg>');
+        }
+
+        .chatbot-header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .chatbot-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chatbot-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+            margin: 5px 0 0 0;
+        }
+
+        .chatbot-body {
+            padding: 20px;
+            height: 350px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .chatbot-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chatbot-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chatbot-body::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+
+        .chatbot-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .chatbot-input {
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 25px;
+            padding: 15px 60px 15px 20px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .chatbot-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: #fff;
+        }
+
+        .send-button {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .send-button:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .chatbot-message {
+            margin-bottom: 15px;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chatbot-bot {
+            background: var(--bot-msg-bg);
+            padding: 15px 20px;
+            border-radius: 20px 20px 20px 5px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            max-width: 90%;
+        }
+
+        .chatbot-user {
+            text-align: right;
+            margin-left: auto;
+        }
+
+        .chatbot-user .message-bubble {
+            background: var(--user-msg-bg);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 20px 20px 5px 20px;
+            display: inline-block;
+            max-width: 90%;
+            position: relative;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 20px;
+            background: var(--bot-msg-bg);
+            border-radius: 20px 20px 20px 5px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            max-width: 90%;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .studymate-icon {
+            background: var(--success-gradient);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(79, 172, 254, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(79, 172, 254, 0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chatbot-container {
+                width: calc(100vw - 40px);
+                right: 20px;
+                bottom: 110px;
+            }
+            
+            .chatbot-icon {
+                right: 20px;
+                bottom: 20px;
+            }
+            
+            .floating-text {
+                display: none;
+            }
+        }
+
+
+ </style>
+
+<div class="row g-3">
+    <!-- Hero Welcome Section -->
+    <div class="col-12">
+        <div class="hero-welcome-card glassmorphism rounded-4 p-4 mb-3 overflow-hidden position-relative">
+            <div class="hero-gradient"></div>
+            <div class="floating-particles"></div>
+
+            
+            <div class="row align-items-center position-relative">
+                <div class="col-lg-8">
+                    <div class="welcome-content">
+                        <div class="greeting-animation">
+                            <h4 class="hero-title mb-2">
+                                <span class="wave-text">Welcome back,</span>
+                                <span class="name-highlight">{{ request.user.first_name }}!</span>
+                            </h4>
+                        </div>
+                        <div class="hero-meta d-flex align-items-center flex-wrap gap-3">
+                            <div class="meta-item d-flex align-items-center">
+                                <div class="meta-icon">
+                                    <i class="fas fa-calendar-day"></i>
+                                </div>
+                                <span class="ms-2 text-sm">{{ "now"|date:"F d, Y" }}</span>
+                            </div>
+                            <div class="meta-item d-flex align-items-center">
+                                <div class="meta-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <span class="ms-2 text-sm" id="current-time"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-end">
+                    <div class="hero-illustration">
+                        <div class="floating-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="achievement-ring"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Stats Cards -->
+    <div class="col-12">
+        <div class="row g-3">
+            <div class="col-lg-4 col-md-6">
+                <div class="premium-stat-card stat-card-goals" data-animate="slideUp" data-delay="100">
+                    <div class="stat-glow"></div>
+                    <div class="stat-content">
+                        <div class="stat-header">
+                            <div class="stat-icon-wrapper">
+                                <div class="stat-icon">
+                                    <i class="fas fa-bullseye"></i>
+                                </div>
+                                <div class="icon-pulse"></div>
+                            </div>
+                            <div class="stat-trend">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                        </div>
+                        <div class="stat-body">
+                            <h5 class="stat-number" data-count="{{ goals|length }}">0</h5>
+                            <p class="stat-label">Active Goals</p>
+                            <div class="stat-progress">
+                                <div class="progress-line goals-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="premium-stat-card stat-card-time" data-animate="slideUp" data-delay="200">
+                    <div class="stat-glow"></div>
+                    <div class="stat-content">
+                        <div class="stat-header">
+                            <div class="stat-icon-wrapper">
+                                <div class="stat-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="icon-pulse"></div>
+                            </div>
+                            <div class="stat-trend">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                        </div>
+                        <div class="stat-body">
+                            <h5 class="stat-number">{{ total_study_hours }}h {{ total_study_minutes }}m</h5>
+                            <p class="stat-label">Total Study Time</p>
+                            <div class="stat-progress">
+                                <div class="progress-line time-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="premium-stat-card stat-card-tasks" data-animate="slideUp" data-delay="300">
+                    <div class="stat-glow"></div>
+                    <div class="stat-content">
+                        <div class="stat-header">
+                            <div class="stat-icon-wrapper">
+                                <div class="stat-icon">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div class="icon-pulse"></div>
+                            </div>
+                            <div class="stat-trend">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                        </div>
+                        <div class="stat-body">
+                            <h5 class="stat-number" data-count="{{ tasks|length }}">0</h5>
+                            <p class="stat-label">Active Tasks</p>
+                            <div class="stat-progress">
+                                <div class="progress-line tasks-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goals Section with Enhanced Design -->
+    <div class="col-lg-8">
+        <div class="premium-card goals-card" data-animate="fadeIn" data-delay="400">
+            <div class="card-header-premium">
+                <div class="header-content">
+                    <h5 class="card-title-premium">
+                        <i class="fas fa-bullseye me-2"></i>
+                        Your Learning Journey
+                    </h5>
+                    <div class="header-actions">
+                        <button class="btn-icon-premium">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body-premium">
+                {% for goal in goals %}
+                <div class="goal-item" data-animate="slideInLeft" data-delay="{{ forloop.counter|add:4 }}00">
+                    <div class="goal-header">
+                        <div class="goal-info">
+                            <h6 class="goal-title">{{ goal.goal_title }}</h6>
+                            <span class="goal-percentage">{{ goal.progress_percentage }}%</span>
+                        </div>
+                        <div class="goal-actions">
+                            <button class="btn-micro">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="goal-progress-container">
+                        <div class="progress-track">
+                            <div class="progress-fill" 
+                                 data-progress="{{ goal.progress_percentage }}"
+                                 style="--progress-color: hsl({{ forloop.counter0|add:120 }}, 70%, 55%)">
+                            </div>
+                            <div class="progress-glow"></div>
+                        </div>
+                    </div>
+                    <div class="goal-meta">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            Created {{ goal.created_at|timesince }} ago
+                        </small>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h6>Set Your First Goal</h6>
+                    <p class="text-sm">Start your learning journey by setting meaningful goals</p>
+                    <a href="{% url 'goals:goal_create' %}" class="btn-premium">
+                        <i class="fas fa-plus me-2"></i>
+                        Create Goal
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Sessions with Timeline Design -->
+    <div class="col-lg-4">
+        <div class="premium-card sessions-card" data-animate="fadeIn" data-delay="500">
+            <div class="card-header-premium">
+                <div class="header-content">
+                    <h5 class="card-title-premium">
+                        <i class="fas fa-clock me-2"></i>
+                        Recent Sessions
+                    </h5>
+                </div>
+            </div>
+            <div class="card-body-premium">
+                <div class="sessions-timeline">
+                    {% for session in sessions|slice:":5" %}
+                    <div class="timeline-item" data-animate="fadeInUp" data-delay="{{ forloop.counter|add:5 }}00">
+                        <div class="timeline-marker">
+                            <div class="marker-dot"></div>
+                            <div class="marker-pulse"></div>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="session-card">
+                                <div class="session-header">
+                                    <h6 class="session-subject">{{ session.subject }}</h6>
+                                    <span class="session-duration text-sm">
+                                        {% if session.start_time and session.end_time %}
+                                            {{ session.end_time|timeuntil:session.start_time }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="session-time text-sm">
+                                    <i class="fas fa-play me-1"></i>
+                                    {{ session.start_time|date:"M d, H:i" }}
+                                    <i class="fas fa-stop ms-2 me-1"></i>
+                                    {{ session.end_time|date:"H:i" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state-mini">
+                        <i class="fas fa-book-open"></i>
+                        <p class="text-sm">No study sessions yet</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Tasks Grid -->
+    <div class="col-12">
+        <div class="premium-card tasks-card" data-animate="fadeIn" data-delay="600">
+            <div class="card-header-premium">
+                <div class="header-content">
+                    <h5 class="card-title-premium">
+                        <i class="fas fa-tasks me-2"></i>
+                        Your Task Board
+                    </h5>
+                    <div class="header-actions">
+                        <div class="view-toggle">
+                            <button class="toggle-btn active" data-view="grid">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button class="toggle-btn" data-view="list">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body-premium">
+                <div class="tasks-grid">
+                    {% for task in tasks|slice:":6" %}
+                    <div class="task-card-premium" data-animate="zoomIn" data-delay="{{ forloop.counter|add:6 }}00">
+                        <div class="task-priority-bar priority-{{ task.priority|default:'medium' }}"></div>
+                        <div class="task-content">
+                            <div class="task-header">
+                                <h6 class="task-title">{{ task.task_title }}</h6>
+                                <div class="task-menu">
+                                    <button class="btn-micro">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="task-meta">
+                                <div class="task-status">
+                                    <span class="status-indicator status-{{ task.status|slugify }}"></span>
+                                    <span class="status-text text-sm">{{ task.status }}</span>
+                                </div>
+                                {% if task.due_date %}
+                                <div class="task-due text-sm">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ task.due_date|date:"M d" }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <h6>No Tasks Yet</h6>
+                        <p class="text-sm">Create your first task to get started</p>
+                        <a href="{% url 'tasks:task_create' %}" class="btn-premium">
+                            <i class="fas fa-plus me-2"></i>
+                            Add Task
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-</body>
-</html>
+
+
+  <div class="chatbot-icon" id="chatbotIcon">
+        <div class="floating-text" id="floatingText">
+            Hey there! Ready to boost your studies?
+            <i class="fas fa-heart ms-2"></i>
+        </div>
+        <div class="studymate-icon" id="ikonic">
+            <i class="fas fa-book-open"></i>
+        </div>
+        <span id="closeIcon" style="display:none"><i class="fas fa-times"></i></span>
+    </div>
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header">
+            <button class="close-btn" id="closeChat">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="chatbot-header-content">
+                <h5 class="chatbot-title">
+                    <i class="fas fa-graduation-cap"></i>
+                    StudyMate Assistant
+                </h5>
+                <p class="chatbot-subtitle">Your personal academic companion</p>
+            </div>
+        </div>
+        <div class="chatbot-body" id="chatbotBody">
+            <div class="chatbot-message chatbot-bot">
+                Hi there! 🎓 I'm your StudyMate, here to help you excel in your academic journey. Whether you need help with study planning, goal setting, or staying motivated, I'm here for you! How can I assist you today?
+            </div>
+        </div>
+        <div class="chatbot-footer">
+            <div class="input-group">
+                <input type="text" class="chatbot-input form-control" id="chatbotInput" placeholder="Ask me about study tips, goals, motivation...">
+                <button id="sendButton" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script src="../../static/core/jquery/jquery-3.6.1.min.js"></script>
+<script src="../../static/core/js/chatbot-messages.js"></script>
+<script src="../../static/core/js/quer.js"></script>
+
+
+
+<style>
+:root {
+    /* Refined Color Palette */
+    --primary-blue: #3b82f6;
+    --primary-blue-light: #60a5fa;
+    --amber: #f59e0b;
+    --amber-light: #fbbf24;
+    --green: #10b981;
+    --green-light: #34d399;
+    --light-gray: #f8fafc;
+    --medium-gray: #64748b;
+    --dark-gray: #334155;
+    --white: #ffffff;
+    --black: #0f172a;
+    
+    /* Subtle Gradients */
+    --primary-gradient: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+    --amber-gradient: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
+    --green-gradient: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --border-radius: 10px;
+    --transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    
+    /* Spacing System */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 0.75rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+}
+
+/* Typography - Reduced Sizes */
+.text-sm { font-size: 0.8125rem; }
+.text-xs { font-size: 0.6875rem; }
+
+/* Animated Background */
+.dashboard-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(135deg, var(--light-gray) 0%, #e2e8f0 100%);
+    overflow: hidden;
+}
+
+.floating-shapes::before,
+.floating-shapes::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(45deg, rgba(59, 130, 246, 0.05), rgba(16, 185, 129, 0.05));
+    animation: float 25s infinite linear;
+}
+
+.floating-shapes::before {
+    width: 150px;
+    height: 150px;
+    top: 15%;
+    left: -5%;
+    animation-delay: 0s;
+}
+
+.floating-shapes::after {
+    width: 120px;
+    height: 120px;
+    bottom: 15%;
+    right: -3%;
+    animation-delay: -12s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-15px) rotate(120deg); }
+    66% { transform: translateY(15px) rotate(240deg); }
+}
+
+/* Glassmorphism Effect */
+.glassmorphism {
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-light);
+}
+
+/* Hero Welcome Card - Smaller */
+.hero-welcome-card {
+    min-height: 100px;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.hero-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient);
+    opacity: 0.04;
+    z-index: 1;
+}
+
+.floating-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.floating-particles::before,
+.floating-particles::after {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(59, 130, 246, 0.25);
+    border-radius: 50%;
+    animation: sparkle 4s infinite;
+}
+
+.floating-particles::before {
+    top: 25%;
+    left: 75%;
+    animation-delay: 0s;
+}
+
+.floating-particles::after {
+    top: 65%;
+    left: 25%;
+    animation-delay: 2s;
+}
+
+@keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0); }
+    50% { opacity: 1; transform: scale(1); }
+}
+
+.hero-title {
+    font-size: 1.375rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--black);
+    margin-bottom: var(--spacing-md);
+}
+
+.wave-text {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+}
+
+.name-highlight {
+    color: var(--primary-blue);
+    position: relative;
+}
+
+.name-highlight::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary-gradient);
+    border-radius: 1px;
+    animation: expand 1.5s ease-out;
+}
+
+@keyframes expand {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+.meta-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+    transition: var(--transition);
+    font-size: 0.8125rem;
+    margin-right: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.meta-item:hover {
+    background: rgba(255, 255, 255, 0.6);
+    transform: translateY(-1px);
+}
+
+.meta-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.6875rem;
+    margin-right: var(--spacing-xs);
+}
+
+/* Hero Illustration - Smaller */
+.hero-illustration {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    position: relative;
+    z-index: 3;
+    animation: levitate 3s ease-in-out infinite;
+}
+
+.achievement-ring {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 2px solid transparent;
+    border-top-color: var(--primary-blue);
+    border-radius: 50%;
+    animation: rotate 6s linear infinite;
+    z-index: 2;
+}
+
+@keyframes levitate {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-4px); }
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Premium Stat Cards - Smaller with Better Spacing */
+.premium-stat-card {
+    background: var(--white);
+    backdrop-filter: blur(15px);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+    cursor: pointer;
+    box-shadow: var(--shadow-light);
+    margin-bottom: var(--spacing-lg);
+}
+
+.premium-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.stat-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.stat-card-goals .stat-glow { background: var(--green-gradient); }
+.stat-card-time .stat-glow { background: var(--amber-gradient); }
+.stat-card-tasks .stat-glow { background: var(--primary-gradient); }
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.stat-icon-wrapper {
+    position: relative;
+}
+
+.stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: white;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-card-goals .stat-icon { background: var(--green-gradient); }
+.stat-card-time .stat-icon { background: var(--amber-gradient); }
+.stat-card-tasks .stat-icon { background: var(--primary-gradient); }
+
+.icon-pulse {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 8px;
+    animation: pulse 2.5s infinite;
+    z-index: 1;
+}
+
+.stat-card-goals .icon-pulse { background: var(--green-gradient); }
+.stat-card-time .icon-pulse { background: var(--amber-gradient); }
+.stat-card-tasks .icon-pulse { background: var(--primary-gradient); }
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.4; }
+    50% { transform: scale(1.03); opacity: 0.15; }
+    100% { transform: scale(1); opacity: 0.4; }
+}
+
+.stat-trend {
+    color: var(--green);
+    font-size: 0.6875rem;
+    font-weight: 500;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-label {
+    color: var(--medium-gray);
+    font-weight: 500;
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.8125rem;
+}
+
+.stat-progress {
+    height: 2px;
+    background: var(--light-gray);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-line {
+    height: 100%;
+    border-radius: 2px;
+    animation: progressFill 2s ease-out;
+}
+
+.goals-progress { 
+    background: var(--green-gradient); 
+    width: 75%;
+}
+.time-progress { 
+    background: var(--amber-gradient); 
+    width: 60%;
+}
+.tasks-progress { 
+    background: var(--primary-gradient); 
+    width: 45%;
+}
+
+@keyframes progressFill {
+    0% { width: 0%; }
+}
+
+/* Premium Cards - Better Spacing */
+.premium-card {
+    background: var(--white);
+    backdrop-filter: blur(15px);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: var(--shadow-light);
+    overflow: hidden;
+    transition: var(--transition);
+    margin-bottom: var(--spacing-xl);
+}
+
+.premium-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+}
+
+.card-header-premium {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.02);
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.4) 0%, rgba(241, 245, 249, 0.2) 100%);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-title-premium {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dark-gray);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.card-title-premium i {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.btn-icon-premium {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: var(--primary-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    cursor: pointer;
+    font-size: 0.8125rem;
+}
+
+.btn-icon-premium:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+
+.card-body-premium {
+    padding: var(--spacing-lg);
+}
+
+/* Goals Styling - Better Spacing */
+.goal-item {
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 8px;
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.goal-item:hover {
+    transform: translateX(2px);
+    background: rgba(248, 250, 252, 1);
+}
+
+.goal-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--primary-gradient);
+    border-radius: 0 2px 2px 0;
+}
+
+.goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-sm);
+}
+
+.goal-title {
+    font-weight: 500;
+    color: var(--dark-gray);
+    margin-bottom: var(--spacing-xs);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.goal-percentage {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.btn-micro {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: none;
+    background: rgba(59, 130, 246, 0.06);
+    color: var(--primary-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    cursor: pointer;
+    font-size: 0.6875rem;
+}
+
+.btn-micro:hover {
+    background: rgba(59, 130, 246, 0.12);
+    transform: scale(1.05);
+}
+
+.goal-progress-container {
+    margin-bottom: var(--spacing-sm);
+}
+
+.progress-track {
+    height: 4px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--progress-color, var(--primary-gradient));
+    border-radius: 4px;
+    position: relative;
+    transition: width 2s ease-out;
+    width: 0%;
+}
+
+.progress-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    width: 15px;
+    animation: shimmer 2.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -15px; opacity: 0; }
+    50% { opacity: 1; }
+    100% { left: 100%; opacity: 0; }
+}
+
+/* Timeline for Sessions - More Compact */
+.sessions-timeline {
+    position: relative;
+}
+
+.sessions-timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--primary-blue), rgba(59, 130, 246, 0.1));
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 36px;
+    margin-bottom: var(--spacing-lg);
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marker-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    position: relative;
+    z-index: 2;
+}
+
+.marker-pulse {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.12);
+    animation: markerPulse 2.5s infinite;
+}
+
+@keyframes markerPulse {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(1.2); opacity: 0; }
+}
+
+.session-card {
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 6px;
+    padding: var(--spacing-md);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transition: var(--transition);
+}
+
+.session-card:hover {
+    background: rgba(248, 250, 252, 1);
+    transform: translateY(-1px);
+}
+
+.session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.session-subject {
+    font-weight: 500;
+    color: var(--dark-gray);
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.session-duration {
+    color: var(--primary-blue);
+    font-weight: 500;
+    font-size: 0.8125rem;
+}
+
+.session-time {
+    color: var(--medium-gray);
+    font-size: 0.8125rem;
+}
+
+/* Tasks Grid - Better Spacing */
+.tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.task-card-premium {
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    transition: var(--transition);
+    position: relative;
+}
+
+.task-card-premium:hover {
+    transform: translateY(-1px);
+    background: rgba(248, 250, 252, 1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.task-priority-bar {
+    height: 2px;
+    width: 100%;
+}
+
+.priority-high { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.priority-medium { background: var(--amber-gradient); }
+.priority-low { background: var(--green-gradient); }
+
+.task-content {
+    padding: var(--spacing-lg);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-sm);
+}
+
+.task-title {
+    font-weight: 500;
+    color: var(--dark-gray);
+    margin: 0;
+    line-height: 1.4;
+    font-size: 0.875rem;
+}
+
+.task-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.task-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.status-indicator {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+
+.status-completed { background: var(--green); }
+.status-in-progress { background: var(--amber); }
+.status-pending { background: var(--medium-gray); }
+
+.status-text {
+    font-weight: 500;
+    text-transform: capitalize;
+    color: var(--medium-gray);
+    font-size: 0.8125rem;
+}
+
+.task-due {
+    color: var(--medium-gray);
+    font-size: 0.8125rem;
+}
+
+/* View Toggle - Smaller */
+.view-toggle {
+    display: flex;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    padding: 2px;
+}
+
+.toggle-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--medium-gray);
+    transition: var(--transition);
+    cursor: pointer;
+    font-size: 0.8125rem;
+}
+
+.toggle-btn.active,
+.toggle-btn:hover {
+    background: white;
+    color: var(--primary-blue);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Empty States - More Compact */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-2xl) var(--spacing-xl);
+}
+
+.empty-state-mini {
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-md);
+    color: var(--medium-gray);
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), rgba(16, 185, 129, 0.06));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--spacing-md);
+    font-size: 1.25rem;
+    color: var(--primary-blue);
+}
+
+.empty-state h6 {
+    color: var(--dark-gray);
+    margin-bottom: var(--spacing-xs);
+    font-weight: 600;
+    font-size: 0.9375rem;
+}
+
+.empty-state p {
+    color: var(--medium-gray);
+    margin-bottom: var(--spacing-xl);
+    font-size: 0.8125rem;
+}
+
+.btn-premium {
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 6px;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    color: white;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    transition: var(--transition);
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.8125rem;
+}
+
+.btn-premium:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 12px rgba(59, 130, 246, 0.2);
+    color: white;
+}
+
+/* Animation Classes */
+[data-animate] {
+    opacity: 0;
+    transform: translateY(15px);
+    transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+[data-animate].animate-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+[data-animate="slideUp"].animate-in {
+    transform: translateY(0);
+}
+
+[data-animate="slideInLeft"] {
+    transform: translateX(-15px);
+}
+
+[data-animate="slideInLeft"].animate-in {
+    transform: translateX(0);
+}
+
+[data-animate="fadeIn"] {
+    transform: none;
+}
+
+[data-animate="fadeIn"].animate-in {
+    transform: none;
+}
+
+[data-animate="zoomIn"] {
+    transform: scale(0.95);
+}
+
+[data-animate="zoomIn"].animate-in {
+    transform: scale(1);
+}
+
+[data-animate="fadeInUp"] {
+    transform: translateY(10px);
+}
+
+[data-animate="fadeInUp"].animate-in {
+    transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 1.25rem;
+    }
+    
+    .premium-stat-card {
+        padding: var(--spacing-md);
+    }
+    
+    .stat-number {
+        font-size: 1.25rem;
+    }
+    
+    .card-header-premium,
+    .card-body-premium {
+        padding: var(--spacing-md);
+    }
+    
+    .tasks-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .timeline-item {
+        padding-left: 30px;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-welcome-card {
+        padding: var(--spacing-lg);
+        min-height: 80px;
+    }
+    
+    .hero-title {
+        font-size: 1.125rem;
+    }
+    
+    .meta-item {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.75rem;
+    }
+    
+    .floating-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+    
+    .achievement-ring {
+        width: 64px;
+        height: 64px;
+    }
+    
+    .premium-stat-card {
+        padding: var(--spacing-sm);
+    }
+    
+    .goal-item,
+    .session-card,
+    .task-content {
+        padding: var(--spacing-sm);
+    }
+}
+
+/* Progress Animation Triggers */
+.progress-fill[data-progress] {
+    animation: progressGrow 2s ease-out forwards;
+}
+
+@keyframes progressGrow {
+    0% { width: 0%; }
+    100% { width: var(--progress-width, 0%); }
+}
+
+/* Number Counter Animation */
+.stat-number[data-count] {
+    animation: countUp 1.2s ease-out;
+}
+
+@keyframes countUp {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Additional Spacing Utilities */
+.mb-xs { margin-bottom: var(--spacing-xs); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
+
+.mt-xs { margin-top: var(--spacing-xs); }
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mt-xl { margin-top: var(--spacing-xl); }
+
+.p-xs { padding: var(--spacing-xs); }
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+</style>
+<script>
+// Real-time Clock
+function updateTime() {
+    const now = new Date();
+    const timeElement = document.getElementById('current-time');
+    if (timeElement) {
+        timeElement.textContent = now.toLocaleTimeString([], {
+            hour: '2-digit', 
+            minute: '2-digit'
+        });
+    }
+}
+updateTime();
+setInterval(updateTime, 1000);
+
+// Animation Observer
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -30px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const delay = parseInt(entry.target.dataset.delay) || 0;
+            setTimeout(() => {
+                entry.target.classList.add('animate-in');
+            }, delay);
+            observer.unobserve(entry.target);
+        }
+    });
+}, observerOptions);
+
+// Observe all animated elements
+document.addEventListener('DOMContentLoaded', () => {
+    const animatedElements = document.querySelectorAll('[data-animate]');
+    animatedElements.forEach(el => observer.observe(el));
+    
+    // Animate progress bars
+    setTimeout(() => {
+        const progressBars = document.querySelectorAll('.progress-fill[data-progress]');
+        progressBars.forEach(bar => {
+            const progress = bar.dataset.progress;
+            bar.style.setProperty('--progress-width', progress + '%');
+            bar.style.width = progress + '%';
+        });
+    }, 800);
+    
+    // Animate stat numbers
+    const statNumbers = document.querySelectorAll('.stat-number[data-count]');
+    statNumbers.forEach(stat => {
+        const target = parseInt(stat.dataset.count);
+        const duration = 1500;
+        const increment = target / (duration / 16);
+        let current = 0;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            stat.textContent = Math.floor(current);
+        }, 16);
+    });
+});
+
+// View Toggle Functionality
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+    const tasksGrid = document.querySelector('.tasks-grid');
+    
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const view = btn.dataset.view;
+            
+            // Update active state
+            toggleButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Update grid layout
+            if (view === 'list') {
+                tasksGrid.style.gridTemplateColumns = '1fr';
+            } else {
+                tasksGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+            }
+        });
+    });
+});
+
+// Smooth hover effects
+document.addEventListener('DOMContentLoaded', () => {
+    const cards = document.querySelectorAll('.premium-stat-card, .premium-card, .task-card-premium');
+    
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            if (card.classList.contains('premium-stat-card')) {
+                card.style.transform = 'translateY(-4px)';
+            } else if (card.classList.contains('premium-card')) {
+                card.style.transform = 'translateY(-2px)';
+            } else {
+                card.style.transform = 'translateY(-2px)';
+            }
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+        });
+    });
+});
+
+// Subtle particle system for hero section
+function createParticle() {
+    const particle = document.createElement('div');
+    particle.style.position = 'absolute';
+    particle.style.width = '2px';
+    particle.style.height = '2px';
+    particle.style.background = 'rgba(59, 130, 246, 0.4)';
+    particle.style.borderRadius = '50%';
+    particle.style.pointerEvents = 'none';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.animationName = 'particleFloat';
+    particle.style.animationDuration = (Math.random() * 4 + 3) + 's';
+    particle.style.animationIterationCount = 'infinite';
+    particle.style.animationTimingFunction = 'ease-in-out';
+    
+    const particleContainer = document.querySelector('.floating-particles');
+    if (particleContainer) {
+        particleContainer.appendChild(particle);
+        
+        setTimeout(() => {
+            particle.remove();
+        }, 7000);
+    }
+}
+
+// Create particles periodically
+document.addEventListener('DOMContentLoaded', () => {
+    setInterval(createParticle, 3000);
+});
+
+// Add particle float animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes particleFloat {
+        0% { 
+            transform: translateY(80px) translateX(0px); 
+            opacity: 0; 
+        }
+        15% { 
+            opacity: 1; 
+        }
+        85% { 
+            opacity: 1; 
+        }
+        100% { 
+            transform: translateY(-80px) translateX(30px); 
+            opacity: 0; 
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}
